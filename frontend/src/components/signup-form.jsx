@@ -39,7 +39,7 @@ export function Signupform({
       </div>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2 justify-center flex ">
-          <form className="px-6 md:p-8 w-md">
+          <form className="px-6 md:p-8 w-md" onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome to Streamify</h1>
@@ -72,7 +72,7 @@ export function Signupform({
                 <Input id="confirmPassword" type="password" required onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} />
               </Field>
               <Field>
-                <Button type="submit" onSubmit={handleSubmit}>Sign Up</Button>
+                <Button type="submit">Sign Up</Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with

@@ -15,7 +15,9 @@ export function Signinform({
   className,
   ...props
 }) {
-  const [formData, setFormData] = useState({ email: '', password: '' })
+
+  const [formData, setFormData] = useState({ email: '', password: '' });
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="items-center flex justify-end">

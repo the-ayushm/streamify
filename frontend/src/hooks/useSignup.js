@@ -1,13 +1,13 @@
-import axios from 'axios'
+import api from '../api.js'
 
 export const useSignup = () => {
 
     const signup = async ({ fullName, email, phone, password, confirmPassword }) => {
-        const success = handleInputErrors({ fullName, email, phone, password, confirmPassword })
-        if (!success) return
+        const success = handleInputErrors({ fullName, email, phone, password, confirmPassword });
+        if (!success) return;
 
         try {
-            const res = await axios.post('/api/auth/signup', {
+            const res = await api.post('/api/auth/signup', {
                 fullName,
                 email,
                 phone,
@@ -19,7 +19,7 @@ export const useSignup = () => {
                 throw new Error(data.error)
             } 
             // localstorage
-            localStorage.saveItem('chatuser', data);
+            localStorage.setItem('chatuser', JSON.stringify(data));
 
             // context to set user
         } catch (err) {
@@ -37,4 +37,5 @@ const handleInputErrors = ({ fullName, email, phone, password, confirmPassword }
     if (password != confirmPassword) {
         throw new Error("Passowrds do not match!")
     }
+    return true;
 }
