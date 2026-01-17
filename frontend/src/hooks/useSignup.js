@@ -23,7 +23,7 @@ export const useSignup = () => {
 
             // context to set user
         } catch (err) {
-            console.log(err)
+            console.error(err)
         }
     }
 

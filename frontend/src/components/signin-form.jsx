@@ -11,13 +11,20 @@ import {
 import { Input } from "@/components/ui/input"
 import { ModeToggle } from "./mode-toggle"
 import { useState } from "react"
+import { useSignin } from "@/hooks/useSignin"
 export function Signinform({
   className,
   ...props
 }) {
 
   const [formData, setFormData] = useState({ email: '', password: '' });
-
+  const {signin} = useSignin();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(formData);
+    signin(formData);
+    setFormData({email: '', password: ''});
+  }
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="items-center flex justify-end">
@@ -25,7 +32,7 @@ export function Signinform({
       </div>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2 justify-center flex ">
-          <form className="px-6 md:p-8 w-md">
+          <form className="px-6 md:p-8 w-md" onSubmit={handleSubmit}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome to Streamify</h1>
@@ -41,7 +48,7 @@ export function Signinform({
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" required onChange = {(e) => setFormData({...formData, password: e.target.value})}/>
               </Field>
               <Field>
                 <Button type="submit">Sign In</Button>
