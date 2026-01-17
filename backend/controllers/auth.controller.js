@@ -2,14 +2,17 @@ import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
 import { generateToken } from '../utils/generateToken.js'
 
+// ========================= SIGNUP =====================================================================
 export const signup = async (req, res) => {
     try {
         const { fullName, email, phone, password } = req.body;
 
         // check if user exists
-        const userExist = await User.findOne({ email, phone });
+        const userExist = await User.findOne({
+            $or: [{ email }, { phone }]
+        });
         if (userExist) {
-            return res.json('User already exists!');
+            return res.status(409).json({ error: 'User already exists!' });
         }
 
         // hash password using bcrypt.js
@@ -35,10 +38,51 @@ export const signup = async (req, res) => {
     }
 }
 
-export const signin = (req, res) => {
-    const {email, password} = req.body;
+// =================== SIGN IN =========================================================================
+export const signin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        // check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: "User does not exists!" });
+        }
+
+        // validate password
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(401).json({ error: "Incorrect Password!" });
+        }
+
+        // generate token if user exists
+        generateToken(user._id, res);
+        console.log("USER SIGNED IN SUCCESSFULLY!");
+        // send response
+        res.status(200).json({
+            message: "User signed in successfully!",
+            user: {
+                _id: user._id,
+                name: user.fullName,
+                email: user.email,
+                phone: user.phone
+            }
+        })
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error!" });
+    }
 }
 
-export const signout = () => {
-
+// ============= SIGN OUT ===============================================================================
+export const signout = (req, res) => {
+    // clear cookie first
+    res.clearCookie("streamifyToken", {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: false
+    });
+    // send logout response
+    return res.status(200).json({
+        message: "User logged out successfully!"
+    })
 }
