@@ -1,15 +1,17 @@
 import React from 'react'
 import Signup from './pages/signup/signup'
 import Signin from './pages/signin/signin'
-import {Routes, Route, Navigate} from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (<>
-  <Routes>
-    <Route path="/signup" element={<Signup/>} />
-    <Route path="/signin" element={<Signin/>} />
-    <Route path="*" element={<Navigate to="/signin" />} />
-  </Routes>
+    <Routes>
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/signin" element={<Signin />} />
+      <Route path="*" element={<Navigate to="/signin" />} />
+    </Routes>
   </>
   )
 }
