@@ -1,7 +1,8 @@
+import { useAuth } from '@/context/AuthContext.jsx';
 import api from '../api.js'
 
 export const useSignin = () => {
-
+    const {setUser} = useAuth();
     const signin = async ({email, password}) => {
         const success = handleInputError({email, password});
         if(!success) return;
@@ -18,8 +19,9 @@ export const useSignin = () => {
 
             // save to localStorage
             localStorage.setItem("chatuser", JSON.stringify(data));
-
+            
             // set context to remember user
+            setUser(data);
 
         }catch(err){
             console.error(err);

@@ -1,7 +1,8 @@
 import api from '../api.js'
+import { useAuth } from '@/context/AuthContext.jsx';
 
 export const useSignup = () => {
-
+    const {setUser} = useAuth();
     const signup = async ({ fullName, email, phone, password, confirmPassword }) => {
         const success = handleInputErrors({ fullName, email, phone, password, confirmPassword });
         if (!success) return;
@@ -22,6 +23,7 @@ export const useSignup = () => {
             localStorage.setItem('chatuser', JSON.stringify(data));
 
             // context to set user
+            setUser(data);
         } catch (err) {
             console.error(err)
         }
