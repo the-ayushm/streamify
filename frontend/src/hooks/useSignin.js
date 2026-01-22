@@ -21,7 +21,7 @@ export const useSignin = () => {
             localStorage.setItem("chatuser", JSON.stringify(data));
             
             // set context to remember user
-            setUser(data);
+            setUser(data.user);
 
         }catch(err){
             console.error(err);

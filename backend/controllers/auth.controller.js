@@ -2,7 +2,7 @@ import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
 import { generateToken } from '../utils/generateToken.js'
 
-// ========================= SIGNUP =====================================================================
+// ========================= SIGN UP =====================================================================
 export const signup = async (req, res) => {
     try {
         const { fullName, email, phone, password } = req.body;
@@ -86,3 +86,15 @@ export const signout = (req, res) => {
         message: "User logged out successfully!"
     })
 }
+
+// ================= GET ME ==============================================================================
+export const getMe = (req, res) => {
+  res.status(200).json({
+    user: {
+      _id: req.user._id,
+      name: req.user.fullName,
+      email: req.user.email,
+      phone: req.user.phone,
+    },
+  });
+};

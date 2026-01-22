@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-
+import api from "@/api";
 // create context
 const AuthContext = createContext();
 
@@ -26,8 +26,19 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // getMe
+  useEffect(() => {
+    api.get('/api/auth/me', {withCredentials : true})
+      .then((res) => {
+        setUser(res.data);
+      })
+      .catch(() => {
+        setUser(null);
+      })
+  }, [])
+  
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser,login, logout }}>
       {children}
     </AuthContext.Provider>
   );
