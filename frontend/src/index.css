@@ -76,6 +76,22 @@
     --border: hsl(111.1 25% 66%);
     --input: hsl(111.1 25% 34%);
     --ring: hsl(111.1 88.7% 45.3%);
+
+    --chart-1: hsl(220 90% 56%);
+    --chart-2: hsl(160 84% 39%);
+    --chart-3: hsl(30 95% 55%);
+    --chart-4: hsl(280 65% 60%);
+    --chart-5: hsl(340 75% 55%);
+
+    /* Sidebar (used by chat layout) */
+    --sidebar: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 
   .dark {
@@ -103,6 +119,20 @@
     --border: hsl(111.1 25% 34%);
     --input: hsl(111.1 25% 34%);
     --ring: hsl(111.1 88.7% 45.3%);
+
+    --chart-1: hsl(220 90% 60%);
+    --chart-2: hsl(160 84% 45%);
+    --chart-3: hsl(30 95% 60%);
+    --chart-4: hsl(280 65% 65%);
+    --chart-5: hsl(340 75% 60%);
+
+    --sidebar: var(--card);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
-
