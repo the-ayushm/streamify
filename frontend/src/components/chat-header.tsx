@@ -14,26 +14,40 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Phone, Video, MoreVertical, User, Archive, Ban, Trash2 } from 'lucide-react'
+import { Phone, Video, MoreVertical, User, Archive, Ban, Trash2, ArrowLeftCircleIcon } from 'lucide-react'
 
 interface ChatHeaderProps {
   name: string
   avatar: string
   isOnline: boolean
+  onBack?: () => void
 }
 
-export function ChatHeader({ name, avatar, isOnline }: ChatHeaderProps) {
+export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b border-border/50 bg-card p-4 backdrop-blur-sm flex-shrink-0 h-20">
       {/* Left side - User info */}
       <div className="flex items-center gap-3">
+        {onBack && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full flex md:hidden"
+            onClick={onBack}
+            aria-label="Go back to chats"
+          >
+            <ArrowLeftCircleIcon className="h-5 w-5" />
+          </Button>
+        )}
         <div className="relative">
+
           <Avatar className="h-12 w-12 ring-2 ring-border/30">
             <AvatarImage src="/placeholder.svg" />
             <AvatarFallback className="bg-primary text-primary-foreground">
               {avatar}
             </AvatarFallback>
           </Avatar>
+
           {isOnline && (
             <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-card shadow-lg shadow-green-500/50" />
           )}

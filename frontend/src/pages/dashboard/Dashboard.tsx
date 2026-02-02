@@ -3,6 +3,7 @@ import { ChatSidebar } from './../../components/chat-sidebar'
 import { ChatHeader } from './../../components/chat-header'
 import { ChatArea } from './../../components/chat-area'
 import { ChatInput } from './../../components/chat-input'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 const chatUsers = {
   '1': { name: 'Sarah Anderson', avatar: 'SA', isOnline: true },
@@ -200,7 +201,8 @@ const mockMessages = {
 }
 
 export default function Home() {
-  const [activeChat, setActiveChat] = useState<string | null>('1')
+  const isMobile = useIsMobile();
+  const [activeChat, setActiveChat] = useState<string | null>(isMobile ? null : '1')
   const [messages, setMessages] = useState(
     mockMessages['1' as keyof typeof mockMessages] || []
   )
@@ -232,13 +234,16 @@ export default function Home() {
   return (
     <main className="flex h-screen overflow-hidden bg-background dark">
       {/* Sidebar */}
-      <div className="hidden md:flex w-80 flex-shrink-0 overflow-hidden">
+      <div className={`w-80 flex-shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex') : 'hidden md:flex'
+        }  `}>
         <ChatSidebar onSelectChat={handleSelectChat} activeChat={activeChat} />
       </div>
 
       {/* Chat area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <ChatHeader {...currentUser} />
+      <div className={`flex-1 flex-col overflow-hidden ${
+        isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'
+      }`}>
+        <ChatHeader {...currentUser} onBack = {isMobile ? () => setActiveChat(null) : undefined}/>
         <ChatArea messages={messages} />
         <ChatInput onSendMessage={handleSendMessage} />
       </div>
