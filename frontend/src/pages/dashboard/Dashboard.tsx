@@ -234,7 +234,7 @@ export default function Home() {
   return (
     <main className="flex h-screen overflow-hidden bg-background dark">
       {/* Sidebar */}
-      <div className={`w-80 flex-shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex') : 'hidden md:flex'
+      <div className={`w-80 shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex w-full') : 'hidden md:flex'
         }  `}>
         <ChatSidebar onSelectChat={handleSelectChat} activeChat={activeChat} />
       </div>
