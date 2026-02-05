@@ -42,8 +42,8 @@ export function ChatMessage({
         <div
           className={`rounded-2xl px-4 py-2 max-w-xs lg:max-w-md shadow-sm transition-all ${
             isSent
-              ? 'bg-linear-to-br from-accent to-blue-600 text-accent-foreground'
-              : 'bg-linear-to-br from-card to-slate-700 border border-border text-foreground'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-card border border-border text-foreground'
           }`}
         >
           {image && (

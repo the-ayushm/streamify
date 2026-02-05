@@ -232,7 +232,7 @@ export default function Home() {
     chatUsers[activeChat as keyof typeof chatUsers] || chatUsers['1']
 
   return (
-    <main className="flex h-screen overflow-hidden bg-background dark">
+    <main className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <div className={`w-80 shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex w-full') : 'hidden md:flex'
         }  `}>

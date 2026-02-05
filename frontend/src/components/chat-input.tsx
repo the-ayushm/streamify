@@ -30,7 +30,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
 
   return (
     <div className="border-t border-border/30 bg-card p-4 backdrop-blur-sm flex-shrink-0">
-      <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-secondary to-card px-4 py-3 shadow-lg shadow-black/20 transition-all duration-200">
+      <div className="flex items-center gap-3 rounded-2xl bg-secondary/60 px-4 py-3 shadow-lg shadow-border/40 transition-all duration-200">
         {/* Emoji button */}
         <Button
           size="icon"
@@ -73,7 +73,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         {/* Send button */}
         <Button
           size="icon"
-          className="bg-accent hover:bg-accent/90 text-accent-foreground flex-shrink-0 transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-accent/50"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-primary/40"
           onClick={handleSend}
           disabled={!message.trim()}
           aria-label="Send message"

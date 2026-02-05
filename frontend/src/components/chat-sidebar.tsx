@@ -133,7 +133,7 @@ export function ChatSidebar({
                     </AvatarFallback>
                   </Avatar>
                   {chat.unread > 0 && (
-                    <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
+                    <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                       {chat.unread}
                     </div>
                   )}
