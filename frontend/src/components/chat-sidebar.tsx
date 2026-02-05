@@ -7,6 +7,9 @@ import { Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { DropdownMenuAvatar } from './setting-menu'
+import { useAuth } from '@/context/AuthContext'
+import { ModeToggle } from "./mode-toggle"
+
 
 interface ChatItem {
   id: string
@@ -76,7 +79,7 @@ export function ChatSidebar({
   activeChat: string | null
 }) {
   const [searchTerm, setSearchTerm] = useState('')
-
+  const { user } = useAuth();
   const filteredChats = mockChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -122,7 +125,7 @@ export function ChatSidebar({
             >
               <div className="flex items-center gap-3">
                 {/* Avatar */}
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
@@ -157,10 +160,17 @@ export function ChatSidebar({
       {/* Sidebar Footer (Logged-in User) */}
       <div className="border-t border-sidebar-border p-3">
         <DropdownMenuAvatar
-          name="Ayush Kesharwani"
-          email="ayush@example.com"
-          avatarFallback="AK"
+          name={user?.name || user?.fullName || 'User'}
+          email={user?.email || 'No email'}
+          avatarFallback={
+            user?.name || user?.fullName
+              ? (user.name || user.fullName).charAt(0).toUpperCase()
+              : 'U'
+          }
         />
+        {/* <div className='flex justify-end'>
+          <ModeToggle></ModeToggle>
+        </div> */}
       </div>
 
     </div>

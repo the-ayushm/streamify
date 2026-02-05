@@ -29,7 +29,7 @@ export function ChatMessage({
       className={`flex gap-3 ${isSent ? 'flex-row-reverse' : 'flex-row'} ${isConsecutive ? '-mt-2' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}
     >
       {!isSent && (
-        <Avatar className={`h-8 w-8 flex-shrink-0 ${isConsecutive ? 'opacity-0' : 'opacity-100'}`}>
+        <Avatar className={`h-8 w-8 shrink-0 ${isConsecutive ? 'opacity-0' : 'opacity-100'}`}>
           <AvatarImage src="/placeholder.svg" />
           <AvatarFallback className="bg-accent text-accent-foreground text-xs">
             {senderAvatar}
@@ -42,8 +42,8 @@ export function ChatMessage({
         <div
           className={`rounded-2xl px-4 py-2 max-w-xs lg:max-w-md shadow-sm transition-all ${
             isSent
-              ? 'bg-gradient-to-br from-accent to-blue-600 text-accent-foreground'
-              : 'bg-gradient-to-br from-card to-slate-700 border border-border text-foreground'
+              ? 'bg-linear-to-br from-accent to-blue-600 text-accent-foreground'
+              : 'bg-linear-to-br from-card to-slate-700 border border-border text-foreground'
           }`}
         >
           {image && (
@@ -55,7 +55,7 @@ export function ChatMessage({
               />
             </div>
           )}
-          <p className="text-sm break-words">{content}</p>
+          <p className="text-sm wrap-break-word">{content}</p>
         </div>
 
         {/* Timestamp and read status */}

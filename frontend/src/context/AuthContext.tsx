@@ -34,16 +34,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   // logout
-  const logout = () => {
-    localStorage.removeItem("chatuser");
+  const logout = async () => {
+    try{
+      await api.post('/api/auth/signout', {}, {withCredentials: true})
+    }catch(err){
+      console.error(err);
+    }finally{
+      localStorage.removeItem("chatuser");
     setUser(null);
+    }
   };
 
   // getMe
   useEffect(() => {
     api.get('/api/auth/me', {withCredentials : true})
       .then((res) => {
-        setUser(res.data);
+        setUser(res.data.user);
       })
       .catch(() => {
         setUser(null);

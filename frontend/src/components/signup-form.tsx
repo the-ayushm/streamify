@@ -11,6 +11,7 @@ import {
 import { Input } from "./ui/input"
 import { useState } from "react"
 import { useSignup } from './../hooks/useSignup'
+import { ModeToggle } from "./mode-toggle"
 
 export function Signupform({
   className = "",
@@ -34,6 +35,7 @@ export function Signupform({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="items-center flex justify-end">
+        <ModeToggle/>
       </div>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2 justify-center flex ">

@@ -28,6 +28,7 @@ export const signup = async (req, res) => {
             message: 'User created successfully!',
             user: {
                 _id: user._id,
+                name: user.fullName,
                 email: user.email,
                 phone: user.phone
             }

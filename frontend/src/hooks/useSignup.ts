@@ -20,10 +20,10 @@ export const useSignup = () => {
                 throw new Error(data.error)
             } 
             // localstorage
-            localStorage.setItem('chatuser', JSON.stringify(data));
+            localStorage.setItem('chatuser', JSON.stringify(data.user));
 
             // context to set user
-            setUser(data);
+            setUser(data.user);
         } catch (err) {
             console.error(err)
         }

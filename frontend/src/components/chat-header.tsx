@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Phone, Video, MoreVertical, User, Archive, Ban, Trash2, ArrowLeftCircleIcon } from 'lucide-react'
+import { ModeToggle } from './mode-toggle'
 
 interface ChatHeaderProps {
   name: string
@@ -25,7 +26,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between border-b border-border/50 bg-card p-4 backdrop-blur-sm flex-shrink-0 h-20">
+    <div className="flex items-center justify-between border-b border-border/50 bg-card p-4 backdrop-blur-sm shrink-0 h-20">
       {/* Left side - User info */}
       <div className="flex items-center gap-3">
         {onBack && (
@@ -90,6 +91,8 @@ export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) 
             </TooltipTrigger>
             <TooltipContent>Video call</TooltipContent>
           </Tooltip>
+
+          <ModeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

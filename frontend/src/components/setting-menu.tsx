@@ -11,9 +11,10 @@ import {
 import {
   BadgeCheckIcon,
   BellIcon,
-  CreditCardIcon,
   LogOutIcon,
+  SettingsIcon
 } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
 
 interface DropdownMenuAvatarProps {
   name: string
@@ -26,6 +27,7 @@ export function DropdownMenuAvatar({
   email,
   avatarFallback,
 }: DropdownMenuAvatarProps) {
+  const {logout} = useAuth();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -48,8 +50,8 @@ export function DropdownMenuAvatar({
             Account
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <CreditCardIcon />
-            Billing
+            <SettingsIcon />
+            Settings
           </DropdownMenuItem>
           <DropdownMenuItem>
             <BellIcon />
@@ -57,8 +59,8 @@ export function DropdownMenuAvatar({
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LogOutIcon />
+        <DropdownMenuItem onClick={logout}>
+          <LogOutIcon/>
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>

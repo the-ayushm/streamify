@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js';
 
-const protectRoute = (req, res, next) => {
+const protectRoute = async (req, res, next) => {
     try{
         const token = req.cookies.streamifyToken;
         if(!token){
@@ -11,7 +11,7 @@ const protectRoute = (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = User.findById(decoded.userId).select("-password");
+        const user = await User.findById(decoded.userId).select("-password");
 
         if(!user){
             return res.status(401).json({
