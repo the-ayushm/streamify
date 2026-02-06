@@ -29,13 +29,13 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
   }
 
   return (
-    <div className="border-t border-border/30 bg-card p-4 backdrop-blur-sm flex-shrink-0">
+    <div className="border-t border-border/30 bg-card p-4 backdrop-blur-sm shrink-0">
       <div className="flex items-center gap-3 rounded-2xl bg-secondary/60 px-4 py-3 shadow-lg shadow-border/40 transition-all duration-200">
         {/* Emoji button */}
         <Button
           size="icon"
           variant="ghost"
-          className="hover:bg-accent/10 text-foreground flex-shrink-0 transition-all hover:scale-110"
+          className="hover:bg-accent/10 text-foreground shrink-0 transition-all hover:scale-110"
           aria-label="Emoji picker"
         >
           <Smile className="h-5 w-5" />
@@ -45,7 +45,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         <Button
           size="icon"
           variant="ghost"
-          className="hover:bg-accent/10 text-foreground flex-shrink-0 transition-all hover:scale-110"
+          className="hover:bg-accent/10 text-foreground shrink-0 transition-all hover:scale-110"
           aria-label="Attach file"
         >
           <Paperclip className="h-5 w-5" />
@@ -64,7 +64,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         <Button
           size="icon"
           variant="ghost"
-          className="hover:bg-accent/10 text-foreground flex-shrink-0 transition-all hover:scale-110"
+          className="hover:bg-accent/10 text-foreground shrink-0 transition-all hover:scale-110"
           aria-label="Voice note"
         >
           <Mic className="h-5 w-5" />
@@ -73,7 +73,7 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
         {/* Send button */}
         <Button
           size="icon"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-primary/40"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0 transition-all duration-200 active:scale-95 hover:shadow-lg hover:shadow-primary/40"
           onClick={handleSend}
           disabled={!message.trim()}
           aria-label="Send message"

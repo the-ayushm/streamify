@@ -168,9 +168,6 @@ export function ChatSidebar({
               : 'U'
           }
         />
-        {/* <div className='flex justify-end'>
-          <ModeToggle></ModeToggle>
-        </div> */}
       </div>
 
     </div>
