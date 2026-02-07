@@ -4,7 +4,7 @@ import authRoutes from './routes/authRoutes.js'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
-
+import userRoutes from './routes/userRoutes.js';
 
 
 
@@ -18,6 +18,7 @@ app.use(cors({ origin: 'http://localhost:5173',
 app.use(express.json());
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes)
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
