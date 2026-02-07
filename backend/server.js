@@ -1,10 +1,10 @@
 import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
+import userRoutes from './routes/userRoutes.js';
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
-import userRoutes from './routes/userRoutes.js';
 
 
 
