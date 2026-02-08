@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -26,14 +25,14 @@ export function ChatSidebar({
   activeChat,
   users
 }: {
-  onSelectChat: (id: string) => void
+  onSelectChat: (any) => void
   activeChat: string | null
   users: any[]
 }) {
   const [searchTerm, setSearchTerm] = useState('')
   const { user } = useAuth();
   const filteredUsers = users.filter((user) =>
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    user.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -68,20 +67,20 @@ export function ChatSidebar({
         <div className="space-y-1 p-3">
           {filteredUsers.map((user) => (
             <button
-              key={user.id}
-              onClick={() => onSelectChat(user.id)}
+              key={user._id}
+              onClick={() => onSelectChat(user)}
               className={cn(
                 'w-full rounded-lg p-3 transition-all duration-200 text-left hover:bg-sidebar-accent hover:scale-[1.02] hover:translate-x-1',
-                activeChat === user.id && 'bg-sidebar-accent scale-[1.01]'
+                activeChat === user._id && 'bg-sidebar-accent scale-[1.01]'
               )}
             >
               <div className="flex items-center gap-3">
                 {/* Avatar */}
                 <div className="relative shrink-0">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" />
+                    {/* <AvatarImage src="/placeholder.svg" /> */}
                     <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                      {user.avatar}
+                      {user.fullName?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {user.unread > 0 && (

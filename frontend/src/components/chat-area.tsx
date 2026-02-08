@@ -1,10 +1,9 @@
-
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatMessage } from './chat-message'
 import { useEffect, useRef } from 'react'
 
 interface Message {
-  id: string
+  _id: string
   content: string
   image?: string
   timestamp: string
@@ -15,10 +14,10 @@ interface Message {
 }
 
 interface ChatAreaProps {
-  messages: Message[]
+  messages?: Message[];
 }
 
-export function ChatArea({ messages }: ChatAreaProps) {
+export function ChatArea({ messages = [] }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null)
   const getIsConsecutive = (current: Message, previous: Message | undefined) => {
     return previous && current.senderName === previous.senderName && current.isSent === previous.isSent
@@ -39,8 +38,13 @@ export function ChatArea({ messages }: ChatAreaProps) {
 
           return (
             <ChatMessage
-              key={message.id}
-              {...message}
+              key={message._id}
+              id={message._id}
+              content={message.content}
+              timestamp={message.timestamp}
+              isSent={message.isSent}
+              senderName={message.senderName || 'Unknown'}
+              senderAvatar={message.senderAvatar || 'U'}
               isConsecutive={isConsecutive}
             />
           )

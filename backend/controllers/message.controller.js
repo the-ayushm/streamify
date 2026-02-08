@@ -16,3 +16,20 @@ export const getMessages = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch messages!" });
     }
 }
+
+export const sendMessages = async (req, res) => {
+    try{
+        const {conversationId, text} = req.body;
+        const senderId = req.user._id;
+        const newMessage = await Message.create({
+            conversationId,
+            senderId, 
+            text
+        });
+        return res.status(200).json(newMessage);
+    }catch(err){
+        console.error(err);
+        return res.status(500).json({message: "Failed to send messages!"});
+    }
+}
+

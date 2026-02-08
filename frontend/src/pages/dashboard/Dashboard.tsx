@@ -5,7 +5,7 @@ import { ChatArea } from './../../components/chat-area'
 import { ChatInput } from './../../components/chat-input'
 import { useIsMobile } from '@/hooks/use-mobile'
 import api from './../../api.js'
-
+import { useAuth } from '@/context/AuthContext'
 
 // const chatUsers = {
 //   '1': { name: 'Sarah Anderson', avatar: 'SA', isOnline: true },
@@ -204,60 +204,104 @@ const mockMessages = {
 
 export default function Home() {
   const isMobile = useIsMobile();
-  const [activeChat, setActiveChat] = useState<string | null>(isMobile ? null : '1')
-  const [messages, setMessages] = useState(
-    mockMessages['1' as keyof typeof mockMessages] || []
-  )
+  const [selectedUser, setSelectedUser] = useState<any | null>(null)
+  const [messages, setMessages] = useState<any[]>([])
   const [chatUsers, setChatUsers] = useState<any[]>([]);
-
+  const [conversationId, setConversationId] = useState<string | null>(null)
+  const { user } = useAuth();
+  const loggedInUserId = user?._id; 
+  
   useEffect(() => {
     const fetchChatUsers = async () => {
       try {
         const res = await api.get('/api/users/sidebarUsers', { withCredentials: true });
         setChatUsers(res.data);
       } catch (error) {
-        console.error('Failed to fetch sidear users!', error);
+        console.error('Failed to fetch chat users:', error);
       }
-    }
+    };
     fetchChatUsers();
   }, [])
 
-  const handleSelectChat = (chatId: string) => {
-    setActiveChat(chatId)
-    setMessages(mockMessages[chatId as keyof typeof mockMessages] || [])
+  const handleSelectChat = async (user: any) => {
+    try {
+      const res = await api.post(`/api/conversation/${user._id}`, {}, { withCredentials: true });
+      setSelectedUser(user);
+      setConversationId(res.data.conversationId);
+    } catch (err) {
+      console.error("Failed to open conversation! ", err)
+    }
   }
 
-  const handleSendMessage = (content: string) => {
-    const newMessage = {
-      id: String(messages.length + 1),
-      content,
-      timestamp: new Date().toLocaleTimeString([], {
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const fetchMessages = async () => {
+      try {
+        console.log("Fetching messages...")
+        const res = await api.get(`/api/messages/${conversationId}`, { withCredentials: true });
+        console.log("Messages fetched: ", res.data);
+        const formattedMessages = res.data.map((msg: any) => ({
+          _id: msg._id,
+          content: msg.text, 
+          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          isSent: msg.senderId === loggedInUserId, 
+          senderName: msg.senderId === loggedInUserId
+            ? 'You'
+            : selectedUser?.fullName,
+          senderAvatar: msg.senderId === loggedInUserId
+            ? 'Y'
+            : selectedUser?.fullName?.charAt(0),
+        }));
+        setMessages(formattedMessages);
+      } catch (err) {
+        console.error('Failed to fetch messages:', err);
+      }
+    };
+    fetchMessages();
+  }, [conversationId]);
+
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim() || !conversationId) return;
+    try {
+      const res = await api.post('/api/messages', {
+        conversationId,
+        text
+      })
+      const newMessage = res.data;
+       const formattedMessage = {
+      _id: newMessage._id,
+      content: newMessage.text,
+      timestamp: new Date(newMessage.createdAt).toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
       }),
       isSent: true,
-      isRead: false,
       senderName: 'You',
-      senderAvatar: 'YOU',
+      senderAvatar: 'Y',
+    };
+      setMessages([...messages, formattedMessage])
+    } catch (err) {
+      console.error("Failed to send messages! ", err);
     }
-    setMessages([...messages, newMessage])
   }
 
-  // const currentUser =
-  //   chatUsers[activeChat as keyof typeof chatUsers] || chatUsers['1']
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className={`w-80 shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex w-full') : 'hidden md:flex'
+      <div className={`w-80 shrink-0 overflow-hidden ${isMobile ? (selectedUser ? 'hidden' : 'flex w-full') : 'hidden md:flex'
         }  `}>
-        <ChatSidebar onSelectChat={handleSelectChat} activeChat={activeChat} users={chatUsers} />
+        <ChatSidebar onSelectChat={handleSelectChat} activeChat={selectedUser} users={chatUsers} />
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 flex-col overflow-hidden ${isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'
+      <div className={`flex-1 flex-col overflow-hidden ${isMobile ? (selectedUser ? 'flex' : 'hidden') : 'flex'
         }`}>
-        <ChatHeader onBack={isMobile ? () => setActiveChat(null) : undefined} />
+        <ChatHeader name={selectedUser?.fullName} avatar={selectedUser?.fullName?.charAt(0)} isOnline={false} onBack={isMobile ? () => setSelectedUser(null) : undefined} />
         <ChatArea messages={messages} />
         <ChatInput onSendMessage={handleSendMessage} />
       </div>

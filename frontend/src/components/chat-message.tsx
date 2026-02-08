@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Check, CheckCheck } from 'lucide-react'
 
@@ -24,13 +23,14 @@ export function ChatMessage({
   senderAvatar,
   isConsecutive = false,
 }: ChatMessageProps) {
+  
   return (
     <div
       className={`flex gap-3 ${isSent ? 'flex-row-reverse' : 'flex-row'} ${isConsecutive ? '-mt-2' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}
     >
       {!isSent && (
         <Avatar className={`h-8 w-8 shrink-0 ${isConsecutive ? 'opacity-0' : 'opacity-100'}`}>
-          <AvatarImage src="/placeholder.svg" />
+          {/* <AvatarImage src="/placeholder.svg" /> */}
           <AvatarFallback className="bg-accent text-accent-foreground text-xs">
             {senderAvatar}
           </AvatarFallback>

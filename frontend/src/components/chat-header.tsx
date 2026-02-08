@@ -43,9 +43,9 @@ export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) 
         <div className="relative">
 
           <Avatar className="h-12 w-12 ring-2 ring-border/30">
-            <AvatarImage src="/placeholder.svg" />
+            {/* <AvatarImage src="/placeholder.svg" /> */}
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {avatar}
+              {name?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
