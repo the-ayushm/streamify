@@ -3,6 +3,7 @@ import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js'
+import messageRoutes from './routes/message.routes.js'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
@@ -10,7 +11,7 @@ import cookieParser from 'cookie-parser';
 
 
 dotenv.config();
-const app = express();
+const app = express(); 
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: 'http://localhost:5173',
@@ -21,6 +22,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes)
 app.use('/api/conversation', conversationRoutes);
+app.use('/api/messages', messageRoutes);
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log("MongoDB Connected!");

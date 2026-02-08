@@ -112,11 +112,11 @@ export function ChatSidebar({
       {/* Sidebar Footer (Logged-in User) */}
       <div className="border-t border-sidebar-border p-3">
         <DropdownMenuAvatar
-          name={user?.name || user?.fullName || 'User'}
+          name= {user?.name }
           email={user?.email || 'No email'}
           avatarFallback={
-            user?.name || user?.fullName
-              ? (user.name || user.fullName).charAt(0).toUpperCase()
+            user?.name 
+              ? user.name.charAt(0).toUpperCase()
               : 'U'
           }
         />
