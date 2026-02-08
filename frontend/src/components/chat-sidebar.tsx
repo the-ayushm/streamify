@@ -20,68 +20,20 @@ interface ChatItem {
   unread: number
 }
 
-const mockChats: ChatItem[] = [
-  {
-    id: '1',
-    name: 'Sarah Anderson',
-    avatar: 'SA',
-    lastMessage: 'Sounds good! See you tomorrow at 3 PM.',
-    timestamp: '10m',
-    unread: 2,
-  },
-  {
-    id: '2',
-    name: 'Mike Johnson',
-    avatar: 'MJ',
-    lastMessage: 'I sent you the project files',
-    timestamp: '2h',
-    unread: 0,
-  },
-  {
-    id: '3',
-    name: 'Emily Chen',
-    avatar: 'EC',
-    lastMessage: 'Thanks for your help earlier!',
-    timestamp: 'Yesterday',
-    unread: 0,
-  },
-  {
-    id: '4',
-    name: 'David Wilson',
-    avatar: 'DW',
-    lastMessage: 'Let\'s catch up soon',
-    timestamp: '2 days',
-    unread: 5,
-  },
-  {
-    id: '5',
-    name: 'Jessica Lee',
-    avatar: 'JL',
-    lastMessage: 'Perfect! Everything is set.',
-    timestamp: '3 days',
-    unread: 0,
-  },
-  {
-    id: '6',
-    name: 'Chris Martinez',
-    avatar: 'CM',
-    lastMessage: 'Great work on the presentation',
-    timestamp: '1 week',
-    unread: 0,
-  },
-]
 
 export function ChatSidebar({
   onSelectChat,
   activeChat,
+  users
 }: {
   onSelectChat: (id: string) => void
   activeChat: string | null
+  users: any[]
 }) {
   const [searchTerm, setSearchTerm] = useState('')
   const { user } = useAuth();
-  const filteredChats = mockChats.filter((chat) =>
-    chat.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter((user) =>
+    user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -114,13 +66,13 @@ export function ChatSidebar({
       {/* Chat List */}
       <ScrollArea className="flex-1">
         <div className="space-y-1 p-3">
-          {filteredChats.map((chat) => (
+          {filteredUsers.map((user) => (
             <button
-              key={chat.id}
-              onClick={() => onSelectChat(chat.id)}
+              key={user.id}
+              onClick={() => onSelectChat(user.id)}
               className={cn(
                 'w-full rounded-lg p-3 transition-all duration-200 text-left hover:bg-sidebar-accent hover:scale-[1.02] hover:translate-x-1',
-                activeChat === chat.id && 'bg-sidebar-accent scale-[1.01]'
+                activeChat === user.id && 'bg-sidebar-accent scale-[1.01]'
               )}
             >
               <div className="flex items-center gap-3">
@@ -129,12 +81,12 @@ export function ChatSidebar({
                   <Avatar className="h-10 w-10">
                     <AvatarImage src="/placeholder.svg" />
                     <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-                      {chat.avatar}
+                      {user.avatar}
                     </AvatarFallback>
                   </Avatar>
-                  {chat.unread > 0 && (
+                  {user.unread > 0 && (
                     <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                      {chat.unread}
+                      {user.unread}
                     </div>
                   )}
                 </div>
@@ -142,13 +94,13 @@ export function ChatSidebar({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm">{chat.name}</p>
+                    <p className="font-semibold text-sm">{user.fullName}</p>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {chat.timestamp}
+                      {user.timestamp}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {chat.lastMessage}
+                    {user.lastMessage}
                   </p>
                 </div>
               </div>

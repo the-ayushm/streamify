@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/authRoutes.js'
 import userRoutes from './routes/userRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
@@ -19,7 +20,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes)
-
+app.use('/api/conversation', conversationRoutes);
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log("MongoDB Connected!");

@@ -18,9 +18,9 @@ import { Phone, Video, MoreVertical, User, Archive, Ban, Trash2, ArrowLeftCircle
 import { ModeToggle } from './mode-toggle'
 
 interface ChatHeaderProps {
-  name: string
-  avatar: string
-  isOnline: boolean
+  name?: string
+  avatar?: string
+  isOnline?: boolean
   onBack?: () => void
 }
 

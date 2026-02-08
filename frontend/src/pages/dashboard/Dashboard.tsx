@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChatSidebar } from './../../components/chat-sidebar'
 import { ChatHeader } from './../../components/chat-header'
 import { ChatArea } from './../../components/chat-area'
 import { ChatInput } from './../../components/chat-input'
 import { useIsMobile } from '@/hooks/use-mobile'
+import api from './../../api.js'
 
-const chatUsers = {
-  '1': { name: 'Sarah Anderson', avatar: 'SA', isOnline: true },
-  '2': { name: 'Mike Johnson', avatar: 'MJ', isOnline: false },
-  '3': { name: 'Emily Chen', avatar: 'EC', isOnline: true },
-  '4': { name: 'David Wilson', avatar: 'DW', isOnline: true },
-  '5': { name: 'Jessica Lee', avatar: 'JL', isOnline: false },
-  '6': { name: 'Chris Martinez', avatar: 'CM', isOnline: true },
-}
+
+// const chatUsers = {
+//   '1': { name: 'Sarah Anderson', avatar: 'SA', isOnline: true },
+//   '2': { name: 'Mike Johnson', avatar: 'MJ', isOnline: false },
+//   '3': { name: 'Emily Chen', avatar: 'EC', isOnline: true },
+//   '4': { name: 'David Wilson', avatar: 'DW', isOnline: true },
+//   '5': { name: 'Jessica Lee', avatar: 'JL', isOnline: false },
+//   '6': { name: 'Chris Martinez', avatar: 'CM', isOnline: true },
+// }
 
 const mockMessages = {
   '1': [
@@ -206,6 +208,19 @@ export default function Home() {
   const [messages, setMessages] = useState(
     mockMessages['1' as keyof typeof mockMessages] || []
   )
+  const [chatUsers, setChatUsers] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchChatUsers = async () => {
+      try {
+        const res = await api.get('/api/users/sidebarUsers', { withCredentials: true });
+        setChatUsers(res.data);
+      } catch (error) {
+        console.error('Failed to fetch sidear users!', error);
+      }
+    }
+    fetchChatUsers();
+  }, [])
 
   const handleSelectChat = (chatId: string) => {
     setActiveChat(chatId)
@@ -228,22 +243,21 @@ export default function Home() {
     setMessages([...messages, newMessage])
   }
 
-  const currentUser =
-    chatUsers[activeChat as keyof typeof chatUsers] || chatUsers['1']
+  // const currentUser =
+  //   chatUsers[activeChat as keyof typeof chatUsers] || chatUsers['1']
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <div className={`w-80 shrink-0 overflow-hidden ${isMobile ? (activeChat ? 'hidden' : 'flex w-full') : 'hidden md:flex'
         }  `}>
-        <ChatSidebar onSelectChat={handleSelectChat} activeChat={activeChat} />
+        <ChatSidebar onSelectChat={handleSelectChat} activeChat={activeChat} users={chatUsers} />
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 flex-col overflow-hidden ${
-        isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'
-      }`}>
-        <ChatHeader {...currentUser} onBack = {isMobile ? () => setActiveChat(null) : undefined}/>
+      <div className={`flex-1 flex-col overflow-hidden ${isMobile ? (activeChat ? 'flex' : 'hidden') : 'flex'
+        }`}>
+        <ChatHeader onBack={isMobile ? () => setActiveChat(null) : undefined} />
         <ChatArea messages={messages} />
         <ChatInput onSendMessage={handleSendMessage} />
       </div>
