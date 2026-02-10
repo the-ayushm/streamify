@@ -105,17 +105,25 @@ export default function Home() {
       </div>
 
       {/* Chat area */}
-      <div className={`flex-1 flex-col overflow-hidden ${isMobile ? (selectedUser ? 'flex' : 'hidden') : 'flex'
-        } ${selectedUser ? 'flex' : 'hidden'}`}>
-
-        {!selectedUser ? <h1>Select a user to chat</h1> : (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {!selectedUser ? (
+          <div className="h-full flex items-center justify-center">
+            <h1 className="text-lg text-muted-foreground">
+              Select a user to chat
+            </h1>
+          </div>
+        ) : (
           <>
-            <ChatHeader name={selectedUser?.fullName} avatar={selectedUser?.fullName?.charAt(0)} isOnline={false} onBack={isMobile ? () => setSelectedUser(null) : undefined} />
+            <ChatHeader
+              name={selectedUser.fullName}
+              avatar={selectedUser.fullName.charAt(0)}
+              isOnline={false}
+              onBack={isMobile ? () => setSelectedUser(null) : undefined}
+            />
             <ChatArea messages={messages} />
             <ChatInput onSendMessage={handleSendMessage} />
           </>
         )}
-
       </div>
     </main>
   )
