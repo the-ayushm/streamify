@@ -15,9 +15,10 @@ interface Message {
 
 interface ChatAreaProps {
   messages?: Message[];
+  isLoading?: boolean;
 }
 
-export function ChatArea({ messages = [] }: ChatAreaProps) {
+export function ChatArea({ messages = [], isLoading }: ChatAreaProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null)
   const getIsConsecutive = (current: Message, previous: Message | undefined) => {
     return previous && current.senderName === previous.senderName && current.isSent === previous.isSent
@@ -29,6 +30,23 @@ export function ChatArea({ messages = [] }: ChatAreaProps) {
     })
   }, [messages]);
 
+// 🔹 LOADING STATE (this fixes the flicker)
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+        Loading messages...
+      </div>
+    )
+  }
+
+  // 🔹 EMPTY STATE: no messages yet
+  if (messages.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
+        📭 No messages yet. Say hi 👋
+      </div>
+    )
+  }
   return (
     <ScrollArea className="flex-1 bg-background overflow-hidden">
       <div className="flex flex-col gap-4 p-4 animate-in fade-in duration-300">

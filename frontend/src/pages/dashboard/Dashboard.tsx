@@ -14,6 +14,7 @@ export default function Home() {
   const [messages, setMessages] = useState<any[]>([])
   const [chatUsers, setChatUsers] = useState<any[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const { user } = useAuth();
   const loggedInUserId = user?._id;
 
@@ -44,9 +45,8 @@ export default function Home() {
 
     const fetchMessages = async () => {
       try {
-        console.log("Fetching messages...")
+        setIsLoadingMessages(true)
         const res = await api.get(`/api/messages/${conversationId}`, { withCredentials: true });
-        console.log("Messages fetched: ", res.data);
         const formattedMessages = res.data.map((msg: any) => ({
           _id: msg._id,
           content: msg.text,
@@ -65,6 +65,8 @@ export default function Home() {
         setMessages(formattedMessages);
       } catch (err) {
         console.error('Failed to fetch messages:', err);
+      }finally{
+        setIsLoadingMessages(false);
       }
     };
     fetchMessages();
@@ -120,7 +122,7 @@ export default function Home() {
               isOnline={false}
               onBack={isMobile ? () => setSelectedUser(null) : undefined}
             />
-            <ChatArea messages={messages} />
+            <ChatArea messages={messages} isLoading={isLoadingMessages} />
             <ChatInput onSendMessage={handleSendMessage} />
           </>
         )}
