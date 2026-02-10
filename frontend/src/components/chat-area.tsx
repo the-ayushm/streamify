@@ -1,4 +1,5 @@
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { ScrollArea} from '@/components/ui/scroll-area'
+import { ChatSkeleton } from '@/components/chat-skeleton'
 import { ChatMessage } from './chat-message'
 import { useEffect, useRef } from 'react'
 
@@ -30,16 +31,16 @@ export function ChatArea({ messages = [], isLoading }: ChatAreaProps) {
     })
   }, [messages]);
 
-// 🔹 LOADING STATE (this fixes the flicker)
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-        Loading messages...
-      </div>
-    )
-  }
 
-  // 🔹 EMPTY STATE: no messages yet
+  if (isLoading) {
+  return (
+    <div className="flex-1 bg-background overflow-hidden">
+      <ChatSkeleton />
+    </div>
+  )
+}
+
+  
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
