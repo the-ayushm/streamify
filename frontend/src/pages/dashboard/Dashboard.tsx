@@ -7,6 +7,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import api from './../../api.js'
 import { useAuth } from '@/context/AuthContext'
 import { socket } from "@/lib/socket"
+import { formatMessage } from '@/utils/formatMessage'
 
 export default function Home() {
   const isMobile = useIsMobile();
@@ -47,21 +48,7 @@ export default function Home() {
       try {
         setIsLoadingMessages(true)
         const res = await api.get(`/api/messages/${conversationId}`, { withCredentials: true });
-        const formattedMessages = res.data.map((msg: any) => ({
-          _id: msg._id,
-          content: msg.text,
-          timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
-          isSent: msg.senderId === loggedInUserId,
-          senderName: msg.senderId === loggedInUserId
-            ? 'You'
-            : selectedUser?.fullName,
-          senderAvatar: msg.senderId === loggedInUserId
-            ? 'Y'
-            : selectedUser?.fullName?.charAt(0),
-        }));
+        const formattedMessages = res.data.map((msg: any) => formatMessage(msg, loggedInUserId, selectedUser));
         setMessages(formattedMessages);
       } catch (err) {
         console.error('Failed to fetch messages:', err);
@@ -70,7 +57,7 @@ export default function Home() {
       }
     };
     fetchMessages();
-  }, [conversationId]);
+  }, [conversationId, loggedInUserId, selectedUser]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || !conversationId) return;
@@ -80,17 +67,7 @@ export default function Home() {
         text
       })
       const newMessage = res.data;
-      const formattedMessage = {
-        _id: newMessage._id,
-        content: newMessage.text,
-        timestamp: new Date(newMessage.createdAt).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        isSent: true,
-        senderName: 'You',
-        senderAvatar: 'Y',
-      };
+      const formattedMessage = formatMessage(newMessage, loggedInUserId, selectedUser);
       setMessages((prev) => [...prev, formattedMessage])
       socket.emit("send-message", {
         conversationId,
@@ -103,52 +80,31 @@ export default function Home() {
 
   useEffect(() => {
     if (!loggedInUserId) return
-
     if (!socket.connected) {
       socket.connect()
     }
-
     return () => {
       socket.disconnect()
     }
   }, [loggedInUserId])
 
- useEffect(() => {
-  if (!conversationId) return
-
-  socket.emit("join-room", conversationId)
-
-  return () => {
-    socket.emit("leave-room", conversationId)
-  }
-}, [conversationId])
-
-useEffect(() => {
-  socket.on("receive-message", (msg) => {
-
-    const formattedMessage = {
-      _id: msg._id,
-      content: msg.text,
-      timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      isSent: msg.senderId === loggedInUserId,  // 🔥 THIS IS KEY
-      senderName: msg.senderId === loggedInUserId
-        ? 'You'
-        : selectedUser?.fullName,
-      senderAvatar: msg.senderId === loggedInUserId
-        ? 'Y'
-        : selectedUser?.fullName?.charAt(0),
+  useEffect(() => {
+    if (!conversationId) return
+    socket.emit("join-room", conversationId)
+    return () => {
+      socket.emit("leave-room", conversationId)
     }
+  }, [conversationId])
 
-    setMessages((prev) => [...prev, formattedMessage])
-  })
-
-  return () => {
-    socket.off("receive-message")
-  }
-}, [loggedInUserId, selectedUser])
+  useEffect(() => {
+    socket.on("receive-message", (msg) => {
+      const formattedMessage = formatMessage(msg, loggedInUserId, selectedUser);
+      setMessages((prev) => [...prev, formattedMessage])
+    })
+    return () => {
+      socket.off("receive-message")
+    }
+  }, [loggedInUserId, selectedUser])
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
