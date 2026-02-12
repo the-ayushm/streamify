@@ -6,7 +6,7 @@ import { ChatInput } from './../../components/chat-input'
 import { useIsMobile } from '@/hooks/use-mobile'
 import api from './../../api.js'
 import { useAuth } from '@/context/AuthContext'
-
+import { socket } from "@/lib/socket"
 
 export default function Home() {
   const isMobile = useIsMobile();
@@ -65,7 +65,7 @@ export default function Home() {
         setMessages(formattedMessages);
       } catch (err) {
         console.error('Failed to fetch messages:', err);
-      }finally{
+      } finally {
         setIsLoadingMessages(false);
       }
     };
@@ -91,12 +91,64 @@ export default function Home() {
         senderName: 'You',
         senderAvatar: 'Y',
       };
-      setMessages([...messages, formattedMessage])
+      setMessages((prev) => [...prev, formattedMessage])
+      socket.emit("send-message", {
+        conversationId,
+        message: newMessage,
+      })
     } catch (err) {
       console.error("Failed to send messages! ", err);
     }
   }
 
+  useEffect(() => {
+    if (!loggedInUserId) return
+
+    if (!socket.connected) {
+      socket.connect()
+    }
+
+    return () => {
+      socket.disconnect()
+    }
+  }, [loggedInUserId])
+
+ useEffect(() => {
+  if (!conversationId) return
+
+  socket.emit("join-room", conversationId)
+
+  return () => {
+    socket.emit("leave-room", conversationId)
+  }
+}, [conversationId])
+
+useEffect(() => {
+  socket.on("receive-message", (msg) => {
+
+    const formattedMessage = {
+      _id: msg._id,
+      content: msg.text,
+      timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      isSent: msg.senderId === loggedInUserId,  // 🔥 THIS IS KEY
+      senderName: msg.senderId === loggedInUserId
+        ? 'You'
+        : selectedUser?.fullName,
+      senderAvatar: msg.senderId === loggedInUserId
+        ? 'Y'
+        : selectedUser?.fullName?.charAt(0),
+    }
+
+    setMessages((prev) => [...prev, formattedMessage])
+  })
+
+  return () => {
+    socket.off("receive-message")
+  }
+}, [loggedInUserId, selectedUser])
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">

@@ -7,14 +7,24 @@ import messageRoutes from './routes/message.routes.js'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
-
-
+import http from 'http';
+import { Server } from 'socket.io';
 
 dotenv.config();
-const app = express(); 
+const app = express();
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        credentials: true,
+    },
+})
+
 const PORT = process.env.PORT || 5000;
 
-app.use(cors({ origin: 'http://localhost:5173',
+app.use(cors({
+    origin: 'http://localhost:5173',
     credentials: true
 }));
 app.use(express.json());
@@ -32,4 +42,27 @@ mongoose.connect(process.env.MONGODB_URI)
         console.error("Error connecting to MongoDB!", err)
     })
 
-app.listen(PORT, () => { console.log(`Server running on port ${PORT}`) })
+io.on('connection', (socket) => {
+    console.log('a user connected');
+
+    socket.on("join-room", (conversationId) => {
+        socket.join(conversationId)
+        console.log("joined room:", conversationId)
+    })
+
+    socket.on("send-message", ({ conversationId, message }) => {
+        socket.to(conversationId).emit("receive-message", message)
+    })
+
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+
+    socket.on("leave-room", (conversationId) => {
+        socket.leave(conversationId)
+    })
+});
+
+
+
+server.listen(PORT, () => { console.log(`Server running on port ${PORT}`) })
