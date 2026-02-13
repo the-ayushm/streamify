@@ -42,8 +42,15 @@ mongoose.connect(process.env.MONGODB_URI)
         console.error("Error connecting to MongoDB!", err)
     })
 
+const onlineUsers = new Map();
+
 io.on('connection', (socket) => {
     console.log('a user connected');
+
+    socket.on("register-user", (userId) => {
+        onlineUsers.set(userId, socket.id)
+        io.emit("online-users", Array.from(onlineUsers.keys()))
+    })
 
     socket.on("join-room", (conversationId) => {
         socket.join(conversationId)
@@ -54,8 +61,24 @@ io.on('connection', (socket) => {
         socket.to(conversationId).emit("receive-message", message)
     })
 
+    socket.on("typing", (conversationId) => {
+        socket.to(conversationId).emit("user-typing")
+    })
+
+    socket.on("stop-typing", (conversationId) => {
+        socket.to(conversationId).emit("user-stop-typing")
+    })
+
     socket.on('disconnect', () => {
         console.log('user disconnected');
+        for (let [userId, socketId] of onlineUsers.entries()) {
+            if (socketId === socket.id) {
+                onlineUsers.delete(userId)
+                break
+            }
+        }
+
+        io.emit("online-users", Array.from(onlineUsers.keys()))
     });
 
     socket.on("leave-room", (conversationId) => {

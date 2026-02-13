@@ -15,7 +15,9 @@ export default function Home() {
   const [messages, setMessages] = useState<any[]>([])
   const [chatUsers, setChatUsers] = useState<any[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null)
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [isTyping, setIsTyping] = useState<boolean>(false);
   const { user } = useAuth();
   const loggedInUserId = user?._id;
 
@@ -82,6 +84,7 @@ export default function Home() {
     if (!loggedInUserId) return
     if (!socket.connected) {
       socket.connect()
+      socket.emit("register-user", loggedInUserId)
     }
     return () => {
       socket.disconnect()
@@ -106,6 +109,31 @@ export default function Home() {
     }
   }, [loggedInUserId, selectedUser])
 
+  useEffect(() => {
+    socket.on("online-users", (users) => {
+      setOnlineUsers(users)
+    })
+
+    return () => {
+      socket.off("online-users")
+    }
+  }, [])
+
+  useEffect(() => {
+    socket.on("user-typing", () => {
+      setIsTyping(true);
+    })
+
+    socket.on("user-stop-typing", () => {
+      setIsTyping(false);
+    })
+
+    return () => {
+      socket.off("user-typing")
+      socket.off("user-stop-typing")
+    }
+  }, [])
+
   return (
     <main className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
@@ -127,11 +155,12 @@ export default function Home() {
             <ChatHeader
               name={selectedUser.fullName}
               avatar={selectedUser.fullName.charAt(0)}
-              isOnline={false}
+              isOnline={onlineUsers.includes(selectedUser._id)}
+              isTyping={isTyping}
               onBack={isMobile ? () => setSelectedUser(null) : undefined}
             />
             <ChatArea messages={messages} isLoading={isLoadingMessages} />
-            <ChatInput onSendMessage={handleSendMessage} />
+            <ChatInput onSendMessage={handleSendMessage} conversationId={conversationId} />
           </>
         )}
       </div>

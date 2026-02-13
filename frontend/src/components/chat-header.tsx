@@ -21,10 +21,11 @@ interface ChatHeaderProps {
   name?: string
   avatar?: string
   isOnline?: boolean
+  isTyping?: boolean
   onBack?: () => void
 }
 
-export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) {
+export function ChatHeader({ name, avatar, isOnline, isTyping, onBack }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b border-border/50 bg-card p-4 backdrop-blur-sm shrink-0 h-20">
       {/* Left side - User info */}
@@ -56,7 +57,7 @@ export function ChatHeader({ name, avatar, isOnline, onBack }: ChatHeaderProps) 
         <div>
           <h2 className="font-semibold text-foreground">{name}</h2>
           <p className="text-xs text-muted-foreground">
-            {isOnline ? 'Online' : 'Offline'}
+            {isTyping? 'Typing...' : isOnline ? 'Online' : 'Offline'}
           </p>
         </div>
       </div>

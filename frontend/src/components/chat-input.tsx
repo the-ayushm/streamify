@@ -5,14 +5,18 @@ import { Button } from './../components/ui/button'
 import { Input } from './../components/ui/input'
 import { Smile, Paperclip, Mic, Send } from 'lucide-react'
 import { useState } from 'react'
+import { socket } from "@/lib/socket"
 
 interface ChatInputProps {
-  onSendMessage: (message: string) => void
+  onSendMessage: (message: string) => void,
+  conversationId: string | null
 }
 
-export function ChatInput({ onSendMessage }: ChatInputProps) {
+export function ChatInput({ onSendMessage , conversationId}: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  let typingTimeout: NodeJS.Timeout
+
 
   const handleSend = () => {
     if (message.trim()) {
@@ -27,6 +31,16 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
       handleSend()
     }
   }
+
+  const handleTyping = () => {
+  socket.emit("typing", conversationId)
+
+  clearTimeout(typingTimeout)
+
+  typingTimeout = setTimeout(() => {
+    socket.emit("stop-typing", conversationId)
+  }, 3000)
+}
 
   return (
     <div className="border-t border-border/30 bg-card p-4 backdrop-blur-sm shrink-0">
@@ -56,7 +70,10 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
           placeholder="Enter message..."
           className="flex-1 bg-transparent text-foreground border-0 placeholder:text-muted-foreground/50 h-6 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value)
+            handleTyping()
+          }}
           onKeyDown={handleKeyDown}
         />
 
