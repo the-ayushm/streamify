@@ -107,7 +107,7 @@ export default function Home() {
 
       socket.emit("message-delivered", {
         messageId: msg._id,
-        conversationId: msg.conversationId,
+        conversationId: msg.conversationId, 
       })
 
       if (conversationId === msg.conversationId) {
