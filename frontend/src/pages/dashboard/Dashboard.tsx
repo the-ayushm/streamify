@@ -94,6 +94,7 @@ export default function Home() {
   useEffect(() => {
     if (!conversationId) return
     socket.emit("join-room", conversationId)
+    socket.emit("message-read", conversationId)
     return () => {
       socket.emit("leave-room", conversationId)
     }
@@ -103,7 +104,31 @@ export default function Home() {
     socket.on("receive-message", (msg) => {
       const formattedMessage = formatMessage(msg, loggedInUserId, selectedUser);
       setMessages((prev) => [...prev, formattedMessage])
+
+      socket.emit("message-delivered", {
+        messageId: msg._id,
+        conversationId: msg.conversationId,
+      })
+
+      if (conversationId === msg.conversationId) {
+        socket.emit("message-read", msg.conversationId);
+      }
     })
+
+    socket.on("message-delivered-update", ({ messageId }) => {
+      setMessages(prev => prev.map(msg => msg._id === messageId ? { ...msg, delivered: true } : msg))
+    })
+
+    socket.on("message-read-update", ({ conversationId }) => {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.conversationId === conversationId
+            ? { ...msg, read: true }
+            : msg
+        )
+      )
+    })
+
     return () => {
       socket.off("receive-message")
     }

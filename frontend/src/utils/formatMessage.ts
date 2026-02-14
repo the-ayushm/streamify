@@ -1,21 +1,23 @@
 export const formatMessage = (
-    msg: any,
-    loggedInUserId: string | undefined,
-    selectedUser: any
+  msg: any,
+  loggedInUserId: string | undefined,
+  selectedUser: any
 ) => {
-    return {
-      _id: msg._id,
-      content: msg.text,
-      timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      isSent: msg.senderId === loggedInUserId, 
-      senderName: msg.senderId === loggedInUserId
-        ? 'You'
-        : selectedUser?.fullName,
-      senderAvatar: msg.senderId === loggedInUserId
-        ? 'Y'
-        : selectedUser?.fullName?.charAt(0),
-    }
+  return {
+    _id: msg._id,
+    content: msg.text,
+    timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    isSent: msg.senderId === loggedInUserId,
+    isDelivered: msg.delivered || false,
+    isRead: msg.read || false,
+    senderName: msg.senderId === loggedInUserId
+      ? 'You'
+      : selectedUser?.fullName,
+    senderAvatar: msg.senderId === loggedInUserId
+      ? 'Y'
+      : selectedUser?.fullName?.charAt(0),
+  }
 }

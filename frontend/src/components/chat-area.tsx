@@ -9,6 +9,7 @@ interface Message {
   image?: string
   timestamp: string
   isSent: boolean
+  isDelivered?: boolean
   isRead?: boolean
   senderName: string
   senderAvatar: string
@@ -62,6 +63,8 @@ export function ChatArea({ messages = [], isLoading }: ChatAreaProps) {
               content={message.content}
               timestamp={message.timestamp}
               isSent={message.isSent}
+              isDelivered={message.isDelivered}
+              isRead={message.isRead}
               senderName={message.senderName || 'Unknown'}
               senderAvatar={message.senderAvatar || 'U'}
               isConsecutive={isConsecutive}

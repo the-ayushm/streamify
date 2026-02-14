@@ -7,6 +7,7 @@ interface ChatMessageProps {
   image?: string
   timestamp: string
   isSent: boolean
+  isDelivered?: boolean
   isRead?: boolean
   senderName: string
   senderAvatar: string
@@ -18,12 +19,13 @@ export function ChatMessage({
   image,
   timestamp,
   isSent,
+  isDelivered,
   isRead,
   senderName,
   senderAvatar,
   isConsecutive = false,
 }: ChatMessageProps) {
-  
+
   return (
     <div
       className={`flex gap-3 ${isSent ? 'flex-row-reverse' : 'flex-row'} ${isConsecutive ? '-mt-2' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}
@@ -40,11 +42,10 @@ export function ChatMessage({
       <div className={`flex flex-col gap-1 ${isSent ? 'items-end' : 'items-start'}`}>
         {/* Message bubble */}
         <div
-          className={`rounded-2xl px-4 py-2 max-w-xs lg:max-w-md shadow-sm transition-all ${
-            isSent
+          className={`rounded-2xl px-4 py-2 max-w-xs lg:max-w-md shadow-sm transition-all ${isSent
               ? 'bg-primary text-primary-foreground'
               : 'bg-card border border-border text-foreground'
-          }`}
+            }`}
         >
           {image && (
             <div className="mb-2 rounded-lg overflow-hidden">
@@ -63,10 +64,16 @@ export function ChatMessage({
           <span className="text-xs text-muted-foreground/70 font-light">{timestamp}</span>
           {isSent && (
             <>
-              {isRead ? (
-                <CheckCheck className="h-3 w-3 text-accent" />
-              ) : (
+              {!isDelivered && (
                 <Check className="h-3 w-3 text-muted-foreground/50" />
+              )}
+
+              {isDelivered && !isRead && (
+                <CheckCheck className="h-3 w-3 text-muted-foreground/70" />
+              )}
+
+              {isRead && (
+                <CheckCheck className="h-3 w-3 text-blue-500" />
               )}
             </>
           )}

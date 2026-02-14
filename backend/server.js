@@ -9,6 +9,7 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser';
 import http from 'http';
 import { Server } from 'socket.io';
+import Message from './models/message.model.js';
 
 dotenv.config();
 const app = express();
@@ -44,7 +45,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 const onlineUsers = new Map();
 
-io.on('connection', (socket) => {
+io.on('connection',  (socket) => {
     console.log('a user connected');
 
     socket.on("register-user", (userId) => {
@@ -58,7 +59,19 @@ io.on('connection', (socket) => {
     })
 
     socket.on("send-message", ({ conversationId, message }) => {
-        socket.to(conversationId).emit("receive-message", message)
+        io.to(conversationId).emit("receive-message", message)
+    })
+
+    socket.on("message-delivered", async ({messageId, conversationId}) => {
+        await Message.findByIdAndUpdate(messageId, {
+            delivered: true
+        })
+        io.to(conversationId).emit("message-delivered-update", {messageId})
+    })
+
+    socket.on("message-read", async (conversationId) => {
+        await Message.updateMany({conversationId, read: false}, {read: true})
+        io.to(conversationId).emit("message-read-update", {conversationId})
     })
 
     socket.on("typing", (conversationId) => {
