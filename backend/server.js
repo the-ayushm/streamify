@@ -99,11 +99,16 @@ io.on('connection', (socket) => {
         socket.to(conversationId).emit("user-stop-typing")
     })
 
-    socket.on("call-user", ({ to, offer, caller }) => {
-        io.to(to).emit("incoming-call", {
-            caller,
-            offer
-        })
+    socket.on("call-user", ({ to, caller, offer }) => {
+
+        const receiverSocketId = onlineUsers.get(to)
+
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("incoming-call", {
+                caller,
+                offer
+            })
+        }
     })
 
     socket.on('disconnect', () => {
