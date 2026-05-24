@@ -8,7 +8,7 @@ import api from './../../api.js'
 import { useAuth } from '@/context/AuthContext'
 import { socket } from "@/lib/socket"
 import { formatMessage } from '@/utils/formatMessage'
-import VideoTest from '@/components/videotest'
+import VideoTest from '@/components/videoTest'
 
 export default function Home() {
   const isMobile = useIsMobile();
