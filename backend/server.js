@@ -45,7 +45,6 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 5000;
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/api/auth', authRoutes);
