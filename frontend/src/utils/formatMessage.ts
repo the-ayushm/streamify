@@ -5,6 +5,7 @@ export const formatMessage = (
 ) => {
   return {
     _id: msg._id,
+    conversationId: msg.conversationId,
     content: msg.text,
     timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
       hour: '2-digit',

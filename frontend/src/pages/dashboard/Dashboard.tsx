@@ -8,6 +8,7 @@ import api from './../../api.js'
 import { useAuth } from '@/context/AuthContext'
 import { socket } from "@/lib/socket"
 import { formatMessage } from '@/utils/formatMessage'
+import VideoTest from '@/components/videotest'
 
 export default function Home() {
   const isMobile = useIsMobile();
@@ -80,16 +81,35 @@ export default function Home() {
     }
   }
 
-  useEffect(() => {
-    if (!loggedInUserId) return
-    if (!socket.connected) {
-      socket.connect()
-      socket.emit("register-user", loggedInUserId)
-    }
-    return () => {
-      socket.disconnect()
-    }
-  }, [loggedInUserId])
+useEffect(() => {
+
+  if (!loggedInUserId) return;
+
+  if (!socket.connected) {
+    socket.connect();
+  }
+
+  const registerUser = () => {
+
+    console.log("Registering user:", loggedInUserId);
+
+    socket.emit("register-user", loggedInUserId);
+
+  };
+
+  // If already connected
+  if (socket.connected) {
+    registerUser();
+  }
+
+  // On future reconnects
+  socket.on("connect", registerUser);
+
+  return () => {
+    socket.off("connect", registerUser);
+  };
+
+}, [loggedInUserId]);
 
   useEffect(() => {
     if (!conversationId) return
@@ -101,63 +121,77 @@ export default function Home() {
   }, [conversationId])
 
   useEffect(() => {
-    socket.on("receive-message", (msg) => {
+    const handleReceive = (msg: any) => {
       const formattedMessage = formatMessage(msg, loggedInUserId, selectedUser);
       setMessages((prev) => [...prev, formattedMessage])
 
       socket.emit("message-delivered", {
         messageId: msg._id,
-        conversationId: msg.conversationId, 
+        conversationId: msg.conversationId,
       })
 
       if (conversationId === msg.conversationId) {
         socket.emit("message-read", msg.conversationId);
       }
-    })
+    }
 
-    socket.on("message-delivered-update", ({ messageId }) => {
-      setMessages(prev => prev.map(msg => msg._id === messageId ? { ...msg, delivered: true } : msg))
-    })
+    const handleDeliveredUpdate = ({ messageId }: { messageId: string }) => {
+      setMessages(prev => prev.map(m => m._id === messageId ? { ...m, isDelivered: true } : m))
+    }
 
-    socket.on("message-read-update", ({ conversationId }) => {
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.conversationId === conversationId
-            ? { ...msg, read: true }
-            : msg
-        )
-      )
-    })
+    const handleReadUpdate = ({ conversationId: convId }: { conversationId: string }) => {
+      setMessages(prev => prev.map(m => m.conversationId === convId ? { ...m, isRead: true } : m))
+    }
+
+    socket.on("receive-message", handleReceive)
+    socket.on("message-delivered-update", handleDeliveredUpdate)
+    socket.on("message-read-update", handleReadUpdate)
 
     return () => {
-      socket.off("receive-message")
+      socket.off("receive-message", handleReceive)
+      socket.off("message-delivered-update", handleDeliveredUpdate)
+      socket.off("message-read-update", handleReadUpdate)
     }
   }, [loggedInUserId, selectedUser])
 
-  useEffect(() => {
-    socket.on("online-users", (users) => {
-      setOnlineUsers(users)
-    })
+useEffect(() => {
 
-    return () => {
-      socket.off("online-users")
-    }
-  }, [])
+  const handleOnlineUsers = (users: string[]) => {
 
-  useEffect(() => {
-    socket.on("user-typing", () => {
-      setIsTyping(true);
-    })
+    console.log("ONLINE USERS:", users);
 
-    socket.on("user-stop-typing", () => {
-      setIsTyping(false);
-    })
+    setOnlineUsers(users);
 
-    return () => {
-      socket.off("user-typing")
-      socket.off("user-stop-typing")
-    }
-  }, [])
+  };
+
+  socket.on("online-users", handleOnlineUsers);
+
+  return () => {
+    socket.off("online-users", handleOnlineUsers);
+  };
+
+}, []);
+
+useEffect(() => {
+
+  const handleTyping = () => {
+    setIsTyping(true);
+  };
+
+  const handleStopTyping = () => {
+    setIsTyping(false);
+  };
+
+  socket.on("user-typing", handleTyping);
+
+  socket.on("user-stop-typing", handleStopTyping);
+
+  return () => {
+    socket.off("user-typing", handleTyping);
+    socket.off("user-stop-typing", handleStopTyping);
+  };
+
+}, []);
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
@@ -174,6 +208,7 @@ export default function Home() {
             <h1 className="text-lg text-muted-foreground">
               Select a user to chat
             </h1>
+            {/* <VideoTest /> */}
           </div>
         ) : (
           <>
