@@ -23,9 +23,10 @@ interface ChatHeaderProps {
   isOnline?: boolean
   isTyping?: boolean
   onBack?: () => void
+  onVideoCall: () => void
 }
 
-export function ChatHeader({ name, avatar, isOnline, isTyping, onBack }: ChatHeaderProps) {
+export function ChatHeader({ name, avatar, isOnline, isTyping, onBack, onVideoCall }: ChatHeaderProps) {
   return (
     <div className="flex items-center justify-between border-b border-border/50 bg-card p-4 backdrop-blur-sm shrink-0 h-20">
       {/* Left side - User info */}
@@ -84,8 +85,9 @@ export function ChatHeader({ name, avatar, isOnline, isTyping, onBack }: ChatHea
               <Button
                 size="icon"
                 variant="ghost"
-                className="hover:bg-accent/10 text-foreground transition-colors"
+                className="hover:bg-accent/10 text-foreground transition-colors cursor-pointer"
                 aria-label="Video call"
+                onClick={onVideoCall}
               >
                 <Video className="h-5 w-5" />
               </Button>

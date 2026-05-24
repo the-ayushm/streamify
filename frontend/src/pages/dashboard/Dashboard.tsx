@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChatSidebar } from './../../components/chat-sidebar'
 import { ChatHeader } from './../../components/chat-header'
 import { ChatArea } from './../../components/chat-area'
@@ -8,7 +8,7 @@ import api from './../../api.js'
 import { useAuth } from '@/context/AuthContext'
 import { socket } from "@/lib/socket"
 import { formatMessage } from '@/utils/formatMessage'
-import VideoTest from '@/components/videoTest'
+import VideoCallModal from '@/components/VideoCallModal'
 
 export default function Home() {
   const isMobile = useIsMobile();
@@ -21,6 +21,12 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const { user } = useAuth();
   const loggedInUserId = user?._id;
+
+  const [isInCall, setIsInCall] = useState(false);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const peerConnection = useRef<RTCPeerConnection | null>(null);
+  const localStream = useRef(null)
 
   useEffect(() => {
     const fetchChatUsers = async () => {
@@ -81,35 +87,35 @@ export default function Home() {
     }
   }
 
-useEffect(() => {
+  useEffect(() => {
 
-  if (!loggedInUserId) return;
+    if (!loggedInUserId) return;
 
-  if (!socket.connected) {
-    socket.connect();
-  }
+    if (!socket.connected) {
+      socket.connect();
+    }
 
-  const registerUser = () => {
+    const registerUser = () => {
 
-    console.log("Registering user:", loggedInUserId);
+      console.log("Registering user:", loggedInUserId);
 
-    socket.emit("register-user", loggedInUserId);
+      socket.emit("register-user", loggedInUserId);
 
-  };
+    };
 
-  // If already connected
-  if (socket.connected) {
-    registerUser();
-  }
+    // If already connected
+    if (socket.connected) {
+      registerUser();
+    }
 
-  // On future reconnects
-  socket.on("connect", registerUser);
+    // On future reconnects
+    socket.on("connect", registerUser);
 
-  return () => {
-    socket.off("connect", registerUser);
-  };
+    return () => {
+      socket.off("connect", registerUser);
+    };
 
-}, [loggedInUserId]);
+  }, [loggedInUserId]);
 
   useEffect(() => {
     if (!conversationId) return
@@ -154,44 +160,112 @@ useEffect(() => {
     }
   }, [loggedInUserId, selectedUser])
 
-useEffect(() => {
+  useEffect(() => {
 
-  const handleOnlineUsers = (users: string[]) => {
+    const handleOnlineUsers = (users: string[]) => {
 
-    console.log("ONLINE USERS:", users);
+      console.log("ONLINE USERS:", users);
 
-    setOnlineUsers(users);
+      setOnlineUsers(users);
 
-  };
+    };
 
-  socket.on("online-users", handleOnlineUsers);
+    socket.on("online-users", handleOnlineUsers);
 
-  return () => {
-    socket.off("online-users", handleOnlineUsers);
-  };
+    return () => {
+      socket.off("online-users", handleOnlineUsers);
+    };
 
-}, []);
+  }, []);
 
-useEffect(() => {
+  useEffect(() => {
 
-  const handleTyping = () => {
-    setIsTyping(true);
-  };
+    const handleTyping = () => {
+      setIsTyping(true);
+    };
 
-  const handleStopTyping = () => {
-    setIsTyping(false);
-  };
+    const handleStopTyping = () => {
+      setIsTyping(false);
+    };
 
-  socket.on("user-typing", handleTyping);
+    socket.on("user-typing", handleTyping);
 
-  socket.on("user-stop-typing", handleStopTyping);
+    socket.on("user-stop-typing", handleStopTyping);
 
-  return () => {
-    socket.off("user-typing", handleTyping);
-    socket.off("user-stop-typing", handleStopTyping);
-  };
+    return () => {
+      socket.off("user-typing", handleTyping);
+      socket.off("user-stop-typing", handleStopTyping);
+    };
 
-}, []);
+  }, []);
+
+  useEffect(() => {
+    socket.on("incoming-call", ({ caller, offer }) => {
+      console.log("Incoming call from:", caller)
+    })
+
+  }, [])
+
+  const startCall = async () => {
+
+    try {
+
+      // Open modal
+      setIsInCall(true);
+
+      // Create peer connection
+      peerConnection.current = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: "stun:stun.l.google.com:19302"
+          }
+        ]
+      });
+
+      // Get camera + microphone
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+
+      localStream.current = stream;
+
+      // Show my own video
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      // Add tracks into peer connection
+      stream.getTracks().forEach((track) => {
+
+        peerConnection.current?.addTrack(track, stream);
+
+      });
+
+      socket.emit("call-user", {
+        to: selectedUser._id,
+        caller: loggedInUserId,
+      })
+
+      console.log("Local stream started");
+
+    } catch (error) {
+
+      console.error("Failed to start call:", error);
+
+    }
+
+  }
+
+  const endCall = () => {
+    localStream.current?.getTracks().forEach((track) => {
+      track.stop()
+    })
+    peerConnection.current?.close();
+    peerConnection.current = null;
+    setIsInCall(false);
+
+  }
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
@@ -208,7 +282,6 @@ useEffect(() => {
             <h1 className="text-lg text-muted-foreground">
               Select a user to chat
             </h1>
-            <VideoTest />
           </div>
         ) : (
           <>
@@ -218,12 +291,25 @@ useEffect(() => {
               isOnline={onlineUsers.includes(selectedUser._id)}
               isTyping={isTyping}
               onBack={isMobile ? () => setSelectedUser(null) : undefined}
+              onVideoCall={startCall}
             />
             <ChatArea messages={messages} isLoading={isLoadingMessages} />
             <ChatInput onSendMessage={handleSendMessage} conversationId={conversationId} />
           </>
         )}
       </div>
+
+      {
+        isInCall && (
+
+          <VideoCallModal
+            localVideoRef={localVideoRef}
+            remoteVideoRef={remoteVideoRef}
+            onEndCall={endCall}
+          />
+
+        )
+      }
     </main>
   )
 }

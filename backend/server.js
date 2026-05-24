@@ -62,7 +62,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 const onlineUsers = new Map();
 
-io.on('connection',  (socket) => {
+io.on('connection', (socket) => {
     console.log('a user connected');
 
     socket.on("register-user", (userId) => {
@@ -79,16 +79,16 @@ io.on('connection',  (socket) => {
         socket.to(conversationId).emit("receive-message", message)
     })
 
-    socket.on("message-delivered", async ({messageId, conversationId}) => {
+    socket.on("message-delivered", async ({ messageId, conversationId }) => {
         await Message.findByIdAndUpdate(messageId, {
             delivered: true
         })
-        io.to(conversationId).emit("message-delivered-update", {messageId})
+        io.to(conversationId).emit("message-delivered-update", { messageId })
     })
 
     socket.on("message-read", async (conversationId) => {
-        await Message.updateMany({conversationId, read: false}, {read: true})
-        io.to(conversationId).emit("message-read-update", {conversationId})
+        await Message.updateMany({ conversationId, read: false }, { read: true })
+        io.to(conversationId).emit("message-read-update", { conversationId })
     })
 
     socket.on("typing", (conversationId) => {
@@ -97,6 +97,13 @@ io.on('connection',  (socket) => {
 
     socket.on("stop-typing", (conversationId) => {
         socket.to(conversationId).emit("user-stop-typing")
+    })
+
+    socket.on("call-user", ({ to, offer, caller }) => {
+        io.to(to).emit("incoming-call", {
+            caller,
+            offer
+        })
     })
 
     socket.on('disconnect', () => {
@@ -119,5 +126,5 @@ io.on('connection',  (socket) => {
 
 
 server.listen(PORT, "0.0.0.0", () => {
-   console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
 })
