@@ -1,6 +1,6 @@
 import User from '../models/user.model.js'
 import bcrypt from 'bcrypt'
-import { generateToken } from '../utils/generateToken.js'
+import { generateToken, getCookieOptions } from '../utils/generateToken.js'
 
 // ========================= SIGN UP =====================================================================
 export const signup = async (req, res) => {
@@ -77,11 +77,7 @@ export const signin = async (req, res) => {
 // ============= SIGN OUT ===============================================================================
 export const signout = (req, res) => {
     // clear cookie first
-    res.clearCookie("streamifyToken", {
-        httpOnly: true,
-        sameSite: "strict",
-        secure: false
-    });
+    res.clearCookie("streamifyToken", getCookieOptions());
     // send logout response
     return res.status(200).json({
         message: "User logged out successfully!"
