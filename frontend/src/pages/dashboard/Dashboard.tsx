@@ -208,7 +208,7 @@ useEffect(() => {
             <h1 className="text-lg text-muted-foreground">
               Select a user to chat
             </h1>
-            {/* <VideoTest /> */}
+            <VideoTest />
           </div>
         ) : (
           <>
