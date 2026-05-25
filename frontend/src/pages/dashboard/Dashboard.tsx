@@ -23,6 +23,7 @@ export default function Home() {
   const loggedInUserId = user?._id;
 
   const [isInCall, setIsInCall] = useState(false);
+  const [incomingCall, setIncomingCall] = useState(null)
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -199,12 +200,14 @@ export default function Home() {
 
   }, []);
 
-  useEffect(() => {
-    socket.on("incoming-call", ({ caller, offer }) => {
-      console.log("Incoming call from:", caller)
-    })
+  socket.on("incoming-call", async ({ offer, caller }) => {
+    console.log("Incoming call from:", caller.name)
 
-  }, [])
+    setIncomingCall({
+      offer,
+      caller
+    })
+  })
 
   const startCall = async () => {
 
@@ -242,9 +245,17 @@ export default function Home() {
 
       });
 
+      // create offer
+      const offer = await peerConnection.current.createOffer();
+      await peerConnection.current.setLocalDescription(offer)
+
       socket.emit("call-user", {
         to: selectedUser._id,
-        caller: loggedInUserId,
+        offer,
+        caller: {
+          id: loggedInUserId,
+          name: user.fullName
+        }
       })
 
       console.log("Local stream started");
@@ -310,6 +321,12 @@ export default function Home() {
 
         )
       }
+
+      {incomingCall && (
+        <div className="fixed top-10 left-10 bg-black text-white p-4 rounded-xl z-50">
+          Incoming Call from {incomingCall.caller.name}
+        </div>
+      )}
     </main>
   )
 }
