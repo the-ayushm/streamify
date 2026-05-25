@@ -527,6 +527,31 @@ export default function Home() {
   const pendingRemoteStream = useRef<MediaStream | null>(null);
   const pendingIceCandidates = useRef<RTCIceCandidateInit[]>([]);
 
+  const buildIceServers = useCallback((): RTCIceServer[] => {
+    const servers: RTCIceServer[] = [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+    ];
+
+    const turnUrls = import.meta.env.VITE_TURN_URL?.split(",").map((url) => url.trim()).filter(Boolean);
+    const turnUsername = import.meta.env.VITE_TURN_USERNAME?.trim();
+    const turnCredential = import.meta.env.VITE_TURN_CREDENTIAL?.trim();
+
+    if (turnUrls?.length && turnUsername && turnCredential) {
+      turnUrls.forEach((url) => {
+        servers.push({
+          urls: url,
+          username: turnUsername,
+          credential: turnCredential,
+        });
+      });
+    } else {
+      console.warn("TURN not configured. STUN-only can cause black remote video on many networks.");
+    }
+
+    return servers;
+  }, []);
+
   // ─── FIX 1: Assign streams to video elements AFTER modal mounts ───────────
   // When isInCall flips to true, the modal renders and refs become valid.
   useEffect(() => {
@@ -626,10 +651,8 @@ export default function Home() {
   // ─── Helper: create a configured RTCPeerConnection ───────────────────────
   const createPeerConnection = useCallback((targetUserId: string) => {
     const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-      ]
+      iceServers: buildIceServers(),
+      iceCandidatePoolSize: 10,
     });
 
     pc.onicecandidate = (event) => {
@@ -654,7 +677,7 @@ export default function Home() {
       console.log("Remote stream received");
       console.log("STREAMS:", event.streams);
       console.log("VIDEO TRACKS:", event.streams[0]?.getVideoTracks());
-      console.log("REMOTE TRACK STATE:", event.track.readyState, "muted:", event.track.muted);
+      console.log("REMOTE TRACK KIND:", event.track.kind, "state:", event.track.readyState, "muted:", event.track.muted);
 
       if (!remoteInboundStream.current) {
         remoteInboundStream.current = new MediaStream();
@@ -664,17 +687,20 @@ export default function Home() {
         remoteInboundStream.current.addTrack(event.track);
       }
 
-      assignRemoteStream(remoteInboundStream.current);
+      const hasLiveVideo = remoteInboundStream.current.getVideoTracks().some((track) => track.readyState === "live");
+      if (hasLiveVideo) {
+        assignRemoteStream(remoteInboundStream.current);
+      }
 
       event.track.onunmute = () => {
-        if (remoteInboundStream.current) {
+        if (remoteInboundStream.current && event.track.kind === "video") {
           assignRemoteStream(remoteInboundStream.current);
         }
       };
     };
 
     return pc;
-  }, [assignRemoteStream]);
+  }, [assignRemoteStream, buildIceServers]);
 
   // ─── Fetch sidebar users ──────────────────────────────────────────────────
   useEffect(() => {
