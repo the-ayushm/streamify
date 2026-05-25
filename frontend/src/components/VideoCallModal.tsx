@@ -20,6 +20,7 @@ export default function VideoCallModal({
       <video
         ref={remoteVideoRef}
         autoPlay
+        muted
         playsInline
         className="w-full h-full object-cover"
       />
