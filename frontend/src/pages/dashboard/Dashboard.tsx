@@ -523,6 +523,7 @@ export default function Home() {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
+  const peerSendStream = useRef<MediaStream | null>(null);
   const pendingRemoteStream = useRef<MediaStream | null>(null);
 
   // ─── FIX 1: Assign streams to video elements AFTER modal mounts ───────────
@@ -773,14 +774,17 @@ export default function Home() {
 
       localStream.current = stream;
 
+      const sendStream = new MediaStream(stream.getTracks().map((track) => track.clone()));
+      peerSendStream.current = sendStream;
+
       // Now mount the modal — useEffect above will assign stream to video element
       setIsInCall(true);
 
       const pc = createPeerConnection(selectedUser._id);
       peerConnection.current = pc;
 
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
+      sendStream.getTracks().forEach((track) => {
+        pc.addTrack(track, sendStream);
       });
 
       const offer = await pc.createOffer();
@@ -814,13 +818,15 @@ export default function Home() {
       });
 
       localStream.current = stream;
+      const sendStream = new MediaStream(stream.getTracks().map((track) => track.clone()));
+      peerSendStream.current = sendStream;
       setIsInCall(true);
 
       const pc = createPeerConnection(callData.caller.id);
       peerConnection.current = pc;
 
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
+      sendStream.getTracks().forEach((track) => {
+        pc.addTrack(track, sendStream);
       });
 
       await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
@@ -844,6 +850,8 @@ export default function Home() {
   const endCall = () => {
     localStream.current?.getTracks().forEach((track) => track.stop());
     localStream.current = null;
+    peerSendStream.current?.getTracks().forEach((track) => track.stop());
+    peerSendStream.current = null;
     pendingRemoteStream.current = null;
     peerConnection.current?.close();
     peerConnection.current = null;
