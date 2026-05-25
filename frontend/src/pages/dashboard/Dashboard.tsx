@@ -23,7 +23,7 @@ export default function Home() {
   const loggedInUserId = user?._id;
 
   const [isInCall, setIsInCall] = useState(false);
-  const [incomingCall, setIncomingCall] = useState(null)
+  const [incomingCall, setIncomingCall] = useState<any>(null)
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -282,6 +282,7 @@ export default function Home() {
 
   const acceptCall = async () => {
     setIsInCall(true)
+    setIncomingCall(null)
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
