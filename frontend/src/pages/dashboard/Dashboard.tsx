@@ -516,6 +516,7 @@ export default function Home() {
 
   const [isInCall, setIsInCall] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(null)
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   // These refs point to the <video> elements inside VideoCallModal
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -540,12 +541,14 @@ export default function Home() {
       remoteVideoRef.current.srcObject = pendingRemoteStream.current;
       remoteVideoRef.current.muted = true;
       remoteVideoRef.current.play().catch(() => {});
+      setRemoteStream(pendingRemoteStream.current);
       pendingRemoteStream.current = null;
     }
   }, [isInCall]);
 
   // ─── Helper: safely assign remote stream ─────────────────────────────────
   const assignRemoteStream = useCallback((stream: MediaStream) => {
+    setRemoteStream(stream);
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = stream;
       // FIX 2: Keep muted=true so autoplay policy is satisfied.
@@ -844,6 +847,7 @@ export default function Home() {
     pendingRemoteStream.current = null;
     peerConnection.current?.close();
     peerConnection.current = null;
+    setRemoteStream(null);
 
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
@@ -885,6 +889,7 @@ export default function Home() {
         <VideoCallModal
           localVideoRef={localVideoRef}
           remoteVideoRef={remoteVideoRef}
+          remoteStream={remoteStream}
           onEndCall={endCall}
         />
       )}

@@ -51,20 +51,33 @@
 // }
 
 import { useState } from "react";
+import { useEffect } from "react";
 import { PhoneOff, Volume2, VolumeX } from "lucide-react";
 
 type Props = {
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+  remoteStream: MediaStream | null;
   onEndCall: () => void;
 };
 
 export default function VideoCallModal({
   localVideoRef,
   remoteVideoRef,
+  remoteStream,
   onEndCall
 }: Props) {
   const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+    const video = remoteVideoRef.current;
+    if (!video || !remoteStream) return;
+
+    video.srcObject = remoteStream;
+    video.muted = true;
+    video.load();
+    video.play().catch(() => {});
+  }, [remoteStream, remoteVideoRef]);
 
   const toggleMute = () => {
     if (remoteVideoRef.current) {
@@ -84,6 +97,9 @@ export default function VideoCallModal({
         playsInline
         className="fixed inset-0 z-0 w-full h-full object-cover"
         onLoadedMetadata={() => {
+          remoteVideoRef.current?.play().catch(() => {});
+        }}
+        onCanPlay={() => {
           remoteVideoRef.current?.play().catch(() => {});
         }}
       />
