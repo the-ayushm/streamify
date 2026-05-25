@@ -281,6 +281,8 @@ export default function Home() {
   }
 
   const acceptCall = async () => {
+    setIsInCall(true)
+
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true
