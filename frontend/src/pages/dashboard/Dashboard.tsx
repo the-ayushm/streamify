@@ -525,6 +525,7 @@ export default function Home() {
   const localStream = useRef<MediaStream | null>(null);
   const remoteInboundStream = useRef<MediaStream | null>(null);
   const pendingRemoteStream = useRef<MediaStream | null>(null);
+  const pendingIceCandidates = useRef<RTCIceCandidateInit[]>([]);
 
   // ─── FIX 1: Assign streams to video elements AFTER modal mounts ───────────
   // When isInCall flips to true, the modal renders and refs become valid.
@@ -605,6 +606,21 @@ export default function Home() {
         console.error("Failed to recover local video track:", err);
       }
     };
+  }, []);
+
+  const flushPendingIceCandidates = useCallback(async () => {
+    const pc = peerConnection.current;
+    if (!pc || !pc.remoteDescription) return;
+
+    while (pendingIceCandidates.current.length > 0) {
+      const candidate = pendingIceCandidates.current.shift();
+      if (!candidate) continue;
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.warn("Failed to add queued ICE candidate:", err);
+      }
+    }
   }, []);
 
   // ─── Helper: create a configured RTCPeerConnection ───────────────────────
@@ -811,18 +827,27 @@ export default function Home() {
         await peerConnection.current.setRemoteDescription(
           new RTCSessionDescription(answer)
         );
+        await flushPendingIceCandidates();
       }
     };
     socket.on("call-answered", handleCallAnswered);
     return () => { socket.off("call-answered", handleCallAnswered); };
-  }, []);
+  }, [flushPendingIceCandidates]);
 
   // ─── Socket: ICE candidates ──────────────────────────────────────────────
   useEffect(() => {
     const handleIceCandidate = async ({ candidate }: any) => {
       console.log("ICE candidate received");
-      if (peerConnection.current && candidate) {
-        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+      if (!peerConnection.current || !candidate) return;
+
+      if (peerConnection.current.remoteDescription) {
+        try {
+          await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+          console.warn("Failed to add ICE candidate:", err);
+        }
+      } else {
+        pendingIceCandidates.current.push(candidate);
       }
     };
     socket.on("ice-candidate", handleIceCandidate);
@@ -890,6 +915,7 @@ export default function Home() {
       attachLocalTracks(pc, stream);
 
       await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
+      await flushPendingIceCandidates();
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
@@ -912,6 +938,7 @@ export default function Home() {
     localStream.current = null;
     remoteInboundStream.current = null;
     pendingRemoteStream.current = null;
+    pendingIceCandidates.current = [];
     peerConnection.current?.close();
     peerConnection.current = null;
     setRemoteStream(null);
