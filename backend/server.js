@@ -100,13 +100,20 @@ io.on('connection', (socket) => {
     })
 
     socket.on("call-user", ({ to, caller, offer }) => {
-
         const receiverSocketId = onlineUsers.get(to)
-
         if (receiverSocketId) {
             io.to(receiverSocketId).emit("incoming-call", {
                 caller,
                 offer
+            })
+        }
+    })
+
+    socket.on("answer-call", ({ to, answer }) => {
+        const receiverSocketId = onlineUsers.get(to)
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("call-answered", {
+                answer
             })
         }
     })

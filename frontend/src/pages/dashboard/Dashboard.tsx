@@ -201,33 +201,36 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-
     const handleIncomingCall = ({ offer, caller }) => {
-
       console.log("Incoming call from:", caller);
-
       setIncomingCall({
         offer,
         caller
       });
-
     };
-
     socket.on("incoming-call", handleIncomingCall);
-
     return () => {
       socket.off("incoming-call", handleIncomingCall);
     };
-
   }, []);
 
+  useEffect(() => {
+    const handleCallAnswered = async ({ answer }) => {
+      console.log("Call answered");
+      await peerConnection.current?.setRemoteDescription(
+        new RTCSessionDescription(answer)
+      )
+    }
+    socket.on("call-answered", handleCallAnswered)
+    return () => {
+      socket.off("call-answered", handleCallAnswered)
+    }
+  }, [])
+
   const startCall = async () => {
-
     try {
-
       // Open modal
       setIsInCall(true);
-
       // Create peer connection
       peerConnection.current = new RTCPeerConnection({
         iceServers: [
@@ -252,10 +255,15 @@ export default function Home() {
 
       // Add tracks into peer connection
       stream.getTracks().forEach((track) => {
-
         peerConnection.current?.addTrack(track, stream);
-
       });
+
+      peerConnection.current.ontrack = (event) => {
+        console.log("Remote stream received");
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = event.streams[0]
+        }
+      }
 
       // create offer
       const offer = await peerConnection.current.createOffer();
@@ -289,6 +297,7 @@ export default function Home() {
       audio: true
     })
     localStream.current = stream
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream
     }
@@ -305,12 +314,24 @@ export default function Home() {
       peerConnection.current.addTrack(track, stream)
     })
 
+    peerConnection.current.ontrack = (event) => {
+      console.log("Remote stream received");
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = event.streams[0]
+      }
+    }
+
     await peerConnection.current.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer)
     )
 
     const answer = await peerConnection.current.createAnswer()
     await peerConnection.current.setLocalDescription(answer)
+
+    socket.emit("answer-call", {
+      to: incomingCall.caller.id,
+      answer
+    })
   }
 
   const endCall = () => {
