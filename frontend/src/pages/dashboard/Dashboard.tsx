@@ -284,13 +284,13 @@ export default function Home() {
 
       peerConnection.current.ontrack = async (event) => {
         console.log("Remote stream received");
+        console.log("STREAMS:", event.streams);
+        console.log(
+          "VIDEO TRACKS:",
+          event.streams[0].getVideoTracks()
+        );
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = event.streams[0];
-          try {
-            await remoteVideoRef.current.play();
-          } catch (err) {
-            console.log("Autoplay blocked:", err);
-          }
         }
       }
 
@@ -350,13 +350,13 @@ export default function Home() {
 
     peerConnection.current.ontrack = async (event) => {
       console.log("Remote stream received");
+      console.log("STREAMS:", event.streams);
+      console.log(
+        "VIDEO TRACKS:",
+        event.streams[0].getVideoTracks()
+      );
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.streams[0];
-        try {
-          await remoteVideoRef.current.play();
-        } catch (err) {
-          console.log("Autoplay blocked:", err);
-        }
       }
     }
 
