@@ -118,6 +118,15 @@ io.on('connection', (socket) => {
         }
     })
 
+    socket.on("ice-candidate", ({ to, candidate }) => {
+        const receiverSocketId = onlineUsers.get(to)
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("ice-candidate", {
+                candidate
+            })
+        }
+    })
+
     socket.on('disconnect', () => {
         console.log('user disconnected');
         for (let [userId, socketId] of onlineUsers.entries()) {

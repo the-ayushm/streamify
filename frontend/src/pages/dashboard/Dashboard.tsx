@@ -227,6 +227,21 @@ export default function Home() {
     }
   }, [])
 
+  useEffect(() => {
+    const handleIceCandidate = async ({ candidate }) => {
+      console.log("ICE candidate received");
+      if (peerConnection.current && candidate) {
+        await peerConnection.current.addIceCandidate(
+          new RTCIceCandidate(candidate)
+        )
+      }
+    }
+    socket.on("ice-candidate", handleIceCandidate)
+    return () => {
+      socket.off("ice-candidate", handleIceCandidate)
+    }
+  }, [])
+
   const startCall = async () => {
     try {
       // Open modal
@@ -239,6 +254,15 @@ export default function Home() {
           }
         ]
       });
+
+      peerConnection.current.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit("ice-candidate", {
+            to: selectedUser._id,
+            candidate: event.candidate
+          })
+        }
+      }
 
       // Get camera + microphone
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -277,13 +301,9 @@ export default function Home() {
           name: user.fullName
         }
       })
-
       console.log("Local stream started");
-
     } catch (error) {
-
       console.error("Failed to start call:", error);
-
     }
 
   }
@@ -309,6 +329,15 @@ export default function Home() {
         }
       ]
     })
+
+    peerConnection.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          to: incomingCall.caller.id,
+          candidate: event.candidate
+        })
+      }
+    }
 
     stream.getTracks().forEach((track) => {
       peerConnection.current.addTrack(track, stream)
