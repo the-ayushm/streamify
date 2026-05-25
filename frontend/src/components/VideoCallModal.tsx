@@ -75,7 +75,6 @@ export default function VideoCallModal({
 
     video.srcObject = remoteStream;
     video.muted = true;
-    video.load();
     video.play().catch(() => {});
   }, [remoteStream, remoteVideoRef]);
 
