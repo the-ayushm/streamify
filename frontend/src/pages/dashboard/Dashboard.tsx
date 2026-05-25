@@ -288,7 +288,7 @@ export default function Home() {
       video: true,
       audio: true
     })
-
+    localStream.current = stream
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream
     }
