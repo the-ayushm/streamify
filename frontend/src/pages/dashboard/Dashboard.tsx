@@ -200,14 +200,26 @@ export default function Home() {
 
   }, []);
 
-  socket.on("incoming-call", async ({ offer, caller }) => {
-    console.log("Incoming call from:", caller.name)
+  useEffect(() => {
 
-    setIncomingCall({
-      offer,
-      caller
-    })
-  })
+    const handleIncomingCall = ({ offer, caller }) => {
+
+      console.log("Incoming call from:", caller);
+
+      setIncomingCall({
+        offer,
+        caller
+      });
+
+    };
+
+    socket.on("incoming-call", handleIncomingCall);
+
+    return () => {
+      socket.off("incoming-call", handleIncomingCall);
+    };
+
+  }, []);
 
   const startCall = async () => {
 
@@ -268,6 +280,36 @@ export default function Home() {
 
   }
 
+  const acceptCall = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    })
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream
+    }
+
+    peerConnection.current = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302"
+        }
+      ]
+    })
+
+    stream.getTracks().forEach((track) => {
+      peerConnection.current.addTrack(track, stream)
+    })
+
+    await peerConnection.current.setRemoteDescription(
+      new RTCSessionDescription(incomingCall.offer)
+    )
+
+    const answer = await peerConnection.current.createAnswer()
+    await peerConnection.current.setLocalDescription(answer)
+  }
+
   const endCall = () => {
     localStream.current?.getTracks().forEach((track) => {
       track.stop()
@@ -325,8 +367,15 @@ export default function Home() {
       {incomingCall && (
         <div className="fixed top-10 left-10 bg-black text-white p-4 rounded-xl z-50">
           Incoming Call from {incomingCall.caller.name}
+          <button
+            onClick={acceptCall}
+            className="bg-green-500 text-white px-4 py-2 rounded-lg mt-2"
+          >
+            Accept
+          </button>
         </div>
       )}
+
     </main>
   )
 }
