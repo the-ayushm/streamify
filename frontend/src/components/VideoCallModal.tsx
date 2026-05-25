@@ -74,7 +74,7 @@ export default function VideoCallModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black z-50 overflow-hidden">
 
       {/* Remote Video — muted by default so browser autoplay works */}
       <video
@@ -82,7 +82,10 @@ export default function VideoCallModal({
         autoPlay
         muted   // FIX: must be muted for autoplay policy; user can unmute below
         playsInline
-        className="w-full h-full object-cover"
+        className="fixed inset-0 z-0 w-full h-full object-cover"
+        onLoadedMetadata={() => {
+          remoteVideoRef.current?.play().catch(() => {});
+        }}
       />
 
       {/* Local Video (picture-in-picture) */}
@@ -91,12 +94,12 @@ export default function VideoCallModal({
         autoPlay
         muted   // always muted to avoid echo
         playsInline
-        className="absolute top-4 right-4 w-48 md:w-64 rounded-xl border-2 border-white shadow-lg"
+        className="fixed top-4 right-4 z-10 w-48 md:w-64 rounded-xl border-2 border-white shadow-lg"
         style={{ transform: "scaleX(-1)" }}
       />
 
       {/* Controls */}
-      <div className="absolute bottom-10 flex items-center gap-4">
+      <div className="fixed bottom-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-4">
         {/* Unmute remote audio button */}
         <button
           onClick={toggleMute}
@@ -121,7 +124,7 @@ export default function VideoCallModal({
 
       {/* Hint if remote video is muted */}
       {isMuted && (
-        <div className="absolute top-4 left-4 bg-black/60 text-white text-xs px-3 py-1 rounded-full">
+        <div className="fixed top-4 left-4 z-10 bg-black/60 text-white text-xs px-3 py-1 rounded-full">
           🔇 Remote audio muted — tap speaker to unmute
         </div>
       )}

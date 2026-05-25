@@ -532,11 +532,14 @@ export default function Home() {
     // Assign local stream once the modal video elements exist
     if (localVideoRef.current && localStream.current) {
       localVideoRef.current.srcObject = localStream.current;
+      localVideoRef.current.play().catch(() => {});
     }
 
     // If remote stream arrived before modal was mounted, assign it now
     if (remoteVideoRef.current && pendingRemoteStream.current) {
       remoteVideoRef.current.srcObject = pendingRemoteStream.current;
+      remoteVideoRef.current.muted = true;
+      remoteVideoRef.current.play().catch(() => {});
       pendingRemoteStream.current = null;
     }
   }, [isInCall]);
@@ -548,6 +551,7 @@ export default function Home() {
       // FIX 2: Keep muted=true so autoplay policy is satisfied.
       // Browser autoplay blocks unmuted video. Users can unmute manually.
       remoteVideoRef.current.muted = true;
+      remoteVideoRef.current.play().catch(() => {});
     } else {
       // Modal not mounted yet — store for later
       pendingRemoteStream.current = stream;
