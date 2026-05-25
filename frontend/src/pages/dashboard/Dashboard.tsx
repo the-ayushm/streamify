@@ -244,8 +244,6 @@ export default function Home() {
 
   const startCall = async () => {
     try {
-      // Open modal
-      setIsInCall(true);
       // Create peer connection
       peerConnection.current = new RTCPeerConnection({
         iceServers: [
@@ -270,11 +268,19 @@ export default function Home() {
         audio: true
       });
 
+      setIsInCall(true);
+
+      console.log(
+        "LOCAL VIDEO TRACKS:",
+        stream.getVideoTracks()
+      )
+
       localStream.current = stream;
 
       // Show my own video
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        await localVideoRef.current.play()
       }
 
       // Add tracks into peer connection
@@ -289,9 +295,30 @@ export default function Home() {
           "VIDEO TRACKS:",
           event.streams[0].getVideoTracks()
         );
+
         if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-        }
+
+  const remoteStream = event.streams[0];
+
+  remoteVideoRef.current.srcObject = remoteStream;
+
+  remoteVideoRef.current.muted = false;
+
+  remoteVideoRef.current.onloadedmetadata = async () => {
+    try {
+
+      await remoteVideoRef.current?.play();
+
+      console.log("Remote video playing");
+
+    } catch (err) {
+
+      console.log("Play error:", err);
+
+    }
+  };
+}
+
       }
 
       // create offer
@@ -306,6 +333,7 @@ export default function Home() {
           name: user.fullName
         }
       })
+
       console.log("Local stream started");
     } catch (error) {
       console.error("Failed to start call:", error);
@@ -314,13 +342,13 @@ export default function Home() {
   }
 
   const acceptCall = async () => {
-    setIsInCall(true)
     setIncomingCall(null)
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true
     })
+    setIsInCall(true);
     localStream.current = stream
 
     if (localVideoRef.current) {
@@ -356,8 +384,27 @@ export default function Home() {
         event.streams[0].getVideoTracks()
       );
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      }
+
+  const remoteStream = event.streams[0];
+
+  remoteVideoRef.current.srcObject = remoteStream;
+
+  remoteVideoRef.current.muted = false;
+
+  remoteVideoRef.current.onloadedmetadata = async () => {
+    try {
+
+      await remoteVideoRef.current?.play();
+
+      console.log("Remote video playing");
+
+    } catch (err) {
+
+      console.log("Play error:", err);
+
+    }
+  };
+}
     }
 
     await peerConnection.current.setRemoteDescription(
