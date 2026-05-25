@@ -523,7 +523,7 @@ export default function Home() {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
-  const peerSendStream = useRef<MediaStream | null>(null);
+  const remoteInboundStream = useRef<MediaStream | null>(null);
   const pendingRemoteStream = useRef<MediaStream | null>(null);
 
   // ─── FIX 1: Assign streams to video elements AFTER modal mounts ───────────
@@ -562,6 +562,51 @@ export default function Home() {
     }
   }, []);
 
+  const attachLocalTracks = useCallback((pc: RTCPeerConnection, stream: MediaStream) => {
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
+
+    const videoTrack = stream.getVideoTracks()[0];
+    if (!videoTrack) return;
+
+    videoTrack.onended = async () => {
+      try {
+        console.warn("Local video track ended. Attempting camera recovery...");
+        const refreshed = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const newVideoTrack = refreshed.getVideoTracks()[0];
+        if (!newVideoTrack) return;
+
+        const sender = pc.getSenders().find((s) => s.track?.kind === "video");
+        if (sender) {
+          await sender.replaceTrack(newVideoTrack);
+        }
+
+        if (localStream.current) {
+          localStream.current.getVideoTracks().forEach((t) => {
+            try {
+              t.stop();
+            } catch {
+              // no-op
+            }
+            localStream.current?.removeTrack(t);
+          });
+          localStream.current.addTrack(newVideoTrack);
+        }
+
+        if (localVideoRef.current && localStream.current) {
+          localVideoRef.current.srcObject = localStream.current;
+          localVideoRef.current.play().catch(() => {});
+        }
+
+        newVideoTrack.onended = videoTrack.onended;
+        console.log("Local video track recovered and replaced");
+      } catch (err) {
+        console.error("Failed to recover local video track:", err);
+      }
+    };
+  }, []);
+
   // ─── Helper: create a configured RTCPeerConnection ───────────────────────
   const createPeerConnection = useCallback((targetUserId: string) => {
     const pc = new RTCPeerConnection({
@@ -580,14 +625,36 @@ export default function Home() {
       }
     };
 
+    pc.onconnectionstatechange = () => {
+      console.log("PC connection state:", pc.connectionState);
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      console.log("PC ICE state:", pc.iceConnectionState);
+    };
+
     // FIX 3: ontrack fires with streams array — use streams[0] directly
     pc.ontrack = (event) => {
       console.log("Remote stream received");
       console.log("STREAMS:", event.streams);
       console.log("VIDEO TRACKS:", event.streams[0]?.getVideoTracks());
-      if (event.streams && event.streams[0]) {
-        assignRemoteStream(event.streams[0]);
+      console.log("REMOTE TRACK STATE:", event.track.readyState, "muted:", event.track.muted);
+
+      if (!remoteInboundStream.current) {
+        remoteInboundStream.current = new MediaStream();
       }
+
+      if (!remoteInboundStream.current.getTrackById(event.track.id)) {
+        remoteInboundStream.current.addTrack(event.track);
+      }
+
+      assignRemoteStream(remoteInboundStream.current);
+
+      event.track.onunmute = () => {
+        if (remoteInboundStream.current) {
+          assignRemoteStream(remoteInboundStream.current);
+        }
+      };
     };
 
     return pc;
@@ -773,9 +840,7 @@ export default function Home() {
       });
 
       localStream.current = stream;
-
-      const sendStream = new MediaStream(stream.getTracks().map((track) => track.clone()));
-      peerSendStream.current = sendStream;
+      console.log("LOCAL TRACKS BEFORE SEND:", stream.getTracks().map((t) => ({ kind: t.kind, readyState: t.readyState, muted: (t as MediaStreamTrack).muted })));
 
       // Now mount the modal — useEffect above will assign stream to video element
       setIsInCall(true);
@@ -783,9 +848,7 @@ export default function Home() {
       const pc = createPeerConnection(selectedUser._id);
       peerConnection.current = pc;
 
-      sendStream.getTracks().forEach((track) => {
-        pc.addTrack(track, sendStream);
-      });
+      attachLocalTracks(pc, stream);
 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
@@ -818,16 +881,13 @@ export default function Home() {
       });
 
       localStream.current = stream;
-      const sendStream = new MediaStream(stream.getTracks().map((track) => track.clone()));
-      peerSendStream.current = sendStream;
+      console.log("LOCAL TRACKS BEFORE SEND:", stream.getTracks().map((t) => ({ kind: t.kind, readyState: t.readyState, muted: (t as MediaStreamTrack).muted })));
       setIsInCall(true);
 
       const pc = createPeerConnection(callData.caller.id);
       peerConnection.current = pc;
 
-      sendStream.getTracks().forEach((track) => {
-        pc.addTrack(track, sendStream);
-      });
+      attachLocalTracks(pc, stream);
 
       await pc.setRemoteDescription(new RTCSessionDescription(callData.offer));
 
@@ -850,8 +910,7 @@ export default function Home() {
   const endCall = () => {
     localStream.current?.getTracks().forEach((track) => track.stop());
     localStream.current = null;
-    peerSendStream.current?.getTracks().forEach((track) => track.stop());
-    peerSendStream.current = null;
+    remoteInboundStream.current = null;
     pendingRemoteStream.current = null;
     peerConnection.current?.close();
     peerConnection.current = null;
