@@ -242,11 +242,21 @@ export default function Home() {
     }
   }, [])
 
- const startCall = async () => {
+const startCall = async () => {
   try {
     peerConnection.current = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
     });
+
+    // ✅ STEP 1: ontrack PEHLE set karo
+    peerConnection.current.ontrack = (event) => {
+      console.log("Remote stream received");
+      const remoteStream = event.streams[0];
+      if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch(console.error);
+      }
+    };
 
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
@@ -257,6 +267,7 @@ export default function Home() {
       }
     };
 
+    // ✅ STEP 2: Stream lo
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true
@@ -266,25 +277,15 @@ export default function Home() {
 
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = stream;
-      await localVideoRef.current.play();
+      // ❌ .play() mat call karo manually — autoPlay attribute hai
     }
 
+    // ✅ STEP 3: Tracks add karo
     stream.getTracks().forEach((track) => {
       peerConnection.current?.addTrack(track, stream);
     });
 
-    peerConnection.current.ontrack = (event) => {
-      const remoteStream = event.streams[0];
-      if (remoteVideoRef.current && remoteStream) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.onloadedmetadata = () => {
-          remoteVideoRef.current?.play()
-            .then(() => console.log("REMOTE VIDEO PLAYING"))
-            .catch((err) => console.log("PLAY ERROR:", err));
-        };
-      }
-    };
-
+    // ✅ STEP 4: Offer banao
     const offer = await peerConnection.current.createOffer();
     await peerConnection.current.setLocalDescription(offer);
 
@@ -294,99 +295,73 @@ export default function Home() {
       caller: { id: loggedInUserId, name: user.fullName }
     });
 
-    // ✅ Sab kuch successful hone ke BAAD hi UI update karo
     setIsInCall(true);
 
   } catch (error) {
     console.error("Failed to start call:", error);
-
-    // ✅ Failure pe cleanup karo
-    localStream.current?.getTracks().forEach((track) => track.stop());
+    localStream.current?.getTracks().forEach(t => t.stop());
     peerConnection.current?.close();
     peerConnection.current = null;
-    localStream.current = null;
-    setIsInCall(false); // ensure UI reset
+    setIsInCall(false);
   }
 };
 
   const acceptCall = async () => {
-    const currentCall = incomingCall;
-    setIncomingCall(null)
+  const currentCall = incomingCall; // ✅ stale closure fix
+  setIncomingCall(null);
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    })
-    await new Promise(resolve => setTimeout(resolve, 100));
-    setIsInCall(true);
-    localStream.current = stream
+  peerConnection.current = new RTCPeerConnection({
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  });
 
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream
+  // ✅ ontrack PEHLE
+  peerConnection.current.ontrack = (event) => {
+    console.log("Remote stream received");
+    const remoteStream = event.streams[0];
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(console.error);
     }
+  };
 
-    peerConnection.current = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: "stun:stun.l.google.com:19302"
-        }
-      ]
-    })
-
-    peerConnection.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", {
-          to: currentCall.caller.id,
-          candidate: event.candidate
-        })
-      }
+  peerConnection.current.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
+        to: currentCall.caller.id,
+        candidate: event.candidate
+      });
     }
+  };
 
-    stream.getTracks().forEach((track) => {
-      peerConnection.current.addTrack(track, stream)
-    })
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  });
 
-    peerConnection.current.ontrack = (event) => {
+  localStream.current = stream;
 
-      console.log("Remote stream received");
-
-      const remoteStream = event.streams[0];
-
-      if (
-        remoteVideoRef.current &&
-        remoteStream
-      ) {
-
-        remoteVideoRef.current.srcObject = remoteStream;
-
-        remoteVideoRef.current.onloadedmetadata = () => {
-
-          remoteVideoRef.current?.play()
-            .then(() => {
-              console.log("REMOTE VIDEO PLAYING");
-            })
-            .catch((err) => {
-              console.log("PLAY ERROR:", err);
-            });
-
-        };
-
-      }
-
-    };
-
-    await peerConnection.current.setRemoteDescription(
-      new RTCSessionDescription(incomingCall.offer)
-    )
-
-    const answer = await peerConnection.current.createAnswer()
-    await peerConnection.current.setLocalDescription(answer)
-
-    socket.emit("answer-call", {
-      to: incomingCall.caller.id,
-      answer
-    })
+  if (localVideoRef.current) {
+    localVideoRef.current.srcObject = stream;
   }
+
+  stream.getTracks().forEach((track) => {
+    peerConnection.current?.addTrack(track, stream);
+  });
+
+  await peerConnection.current.setRemoteDescription(
+    new RTCSessionDescription(currentCall.offer)
+  );
+
+  const answer = await peerConnection.current.createAnswer();
+  await peerConnection.current.setLocalDescription(answer);
+
+  socket.emit("answer-call", {
+    to: currentCall.caller.id,
+    answer
+  });
+
+  setIsInCall(true);
+};
 
   const endCall = () => {
     localStream.current?.getTracks().forEach((track) => {
