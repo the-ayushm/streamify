@@ -254,7 +254,7 @@ const startCall = async () => {
       const remoteStream = event.streams[0];
       if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.play().catch(console.error);
+        // remoteVideoRef.current.play().catch(console.error);
       }
     };
 
@@ -320,7 +320,7 @@ const startCall = async () => {
     const remoteStream = event.streams[0];
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.play().catch(console.error);
+      // remoteVideoRef.current.play().catch(console.error);
     }
   };
 
