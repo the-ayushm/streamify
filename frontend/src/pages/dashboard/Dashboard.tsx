@@ -27,7 +27,7 @@ export default function Home() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
-  const localStream = useRef(null)
+  const localStream = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     const fetchChatUsers = async () => {
@@ -242,112 +242,82 @@ export default function Home() {
     }
   }, [])
 
-  const startCall = async () => {
-    try {
-      // Create peer connection
-      peerConnection.current = new RTCPeerConnection({
-        iceServers: [
-          {
-            urls: "stun:stun.l.google.com:19302"
-          }
-        ]
-      });
+ const startCall = async () => {
+  try {
+    peerConnection.current = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    });
 
-      peerConnection.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", {
-            to: selectedUser._id,
-            candidate: event.candidate
-          })
-        }
+    peerConnection.current.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", {
+          to: selectedUser._id,
+          candidate: event.candidate
+        });
       }
+    };
 
-      // Get camera + microphone
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-      });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
 
-      setIsInCall(true);
+    localStream.current = stream;
 
-      console.log(
-        "LOCAL VIDEO TRACKS:",
-        stream.getVideoTracks()
-      )
-
-      localStream.current = stream;
-
-      // Show my own video
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-        await localVideoRef.current.play()
-      }
-
-      // Add tracks into peer connection
-      stream.getTracks().forEach((track) => {
-        peerConnection.current?.addTrack(track, stream);
-      });
-
-      peerConnection.current.ontrack = async (event) => {
-        console.log("Remote stream received");
-        console.log("STREAMS:", event.streams);
-        console.log(
-          "VIDEO TRACKS:",
-          event.streams[0].getVideoTracks()
-        );
-
-        if (remoteVideoRef.current) {
-
-  const remoteStream = event.streams[0];
-
-  remoteVideoRef.current.srcObject = remoteStream;
-
-  remoteVideoRef.current.muted = false;
-
-  remoteVideoRef.current.onloadedmetadata = async () => {
-    try {
-
-      await remoteVideoRef.current?.play();
-
-      console.log("Remote video playing");
-
-    } catch (err) {
-
-      console.log("Play error:", err);
-
-    }
-  };
-}
-
-      }
-
-      // create offer
-      const offer = await peerConnection.current.createOffer();
-      await peerConnection.current.setLocalDescription(offer)
-
-      socket.emit("call-user", {
-        to: selectedUser._id,
-        offer,
-        caller: {
-          id: loggedInUserId,
-          name: user.fullName
-        }
-      })
-
-      console.log("Local stream started");
-    } catch (error) {
-      console.error("Failed to start call:", error);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      await localVideoRef.current.play();
     }
 
+    stream.getTracks().forEach((track) => {
+      peerConnection.current?.addTrack(track, stream);
+    });
+
+    peerConnection.current.ontrack = (event) => {
+      const remoteStream = event.streams[0];
+      if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.onloadedmetadata = () => {
+          remoteVideoRef.current?.play()
+            .then(() => console.log("REMOTE VIDEO PLAYING"))
+            .catch((err) => console.log("PLAY ERROR:", err));
+        };
+      }
+    };
+
+    const offer = await peerConnection.current.createOffer();
+    await peerConnection.current.setLocalDescription(offer);
+
+    socket.emit("call-user", {
+      to: selectedUser._id,
+      offer,
+      caller: { id: loggedInUserId, name: user.fullName }
+    });
+
+    // ✅ Sab kuch successful hone ke BAAD hi UI update karo
+    setIsInCall(true);
+
+  } catch (error) {
+    console.error("Failed to start call:", error);
+
+    // ✅ Failure pe cleanup karo
+    localStream.current?.getTracks().forEach((track) => track.stop());
+    peerConnection.current?.close();
+    peerConnection.current = null;
+    localStream.current = null;
+    setIsInCall(false); // ensure UI reset
   }
+};
 
   const acceptCall = async () => {
+    const currentCall = incomingCall;
     setIncomingCall(null)
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
       audio: true
     })
+    await new Promise(resolve => setTimeout(resolve, 100));
     setIsInCall(true);
     localStream.current = stream
 
@@ -366,7 +336,7 @@ export default function Home() {
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit("ice-candidate", {
-          to: incomingCall.caller.id,
+          to: currentCall.caller.id,
           candidate: event.candidate
         })
       }
@@ -376,36 +346,34 @@ export default function Home() {
       peerConnection.current.addTrack(track, stream)
     })
 
-    peerConnection.current.ontrack = async (event) => {
+    peerConnection.current.ontrack = (event) => {
+
       console.log("Remote stream received");
-      console.log("STREAMS:", event.streams);
-      console.log(
-        "VIDEO TRACKS:",
-        event.streams[0].getVideoTracks()
-      );
-      if (remoteVideoRef.current) {
 
-  const remoteStream = event.streams[0];
+      const remoteStream = event.streams[0];
 
-  remoteVideoRef.current.srcObject = remoteStream;
+      if (
+        remoteVideoRef.current &&
+        remoteStream
+      ) {
 
-  remoteVideoRef.current.muted = false;
+        remoteVideoRef.current.srcObject = remoteStream;
 
-  remoteVideoRef.current.onloadedmetadata = async () => {
-    try {
+        remoteVideoRef.current.onloadedmetadata = () => {
 
-      await remoteVideoRef.current?.play();
+          remoteVideoRef.current?.play()
+            .then(() => {
+              console.log("REMOTE VIDEO PLAYING");
+            })
+            .catch((err) => {
+              console.log("PLAY ERROR:", err);
+            });
 
-      console.log("Remote video playing");
+        };
 
-    } catch (err) {
+      }
 
-      console.log("Play error:", err);
-
-    }
-  };
-}
-    }
+    };
 
     await peerConnection.current.setRemoteDescription(
       new RTCSessionDescription(incomingCall.offer)
