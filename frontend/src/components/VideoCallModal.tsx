@@ -1,16 +1,35 @@
+import { useEffect } from "react";
 import { PhoneOff } from "lucide-react";
 
 type Props = {
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
   onEndCall: () => void;
 };
 
 export default function VideoCallModal({
   localVideoRef,
   remoteVideoRef,
+  localStream,
+  remoteStream,
   onEndCall
 }: Props) {
+
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(console.error);
+    }
+  }, [localStream, localVideoRef]);
+
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(console.error);
+    }
+  }, [remoteStream, remoteVideoRef]);
 
   return (
 

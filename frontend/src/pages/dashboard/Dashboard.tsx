@@ -28,6 +28,8 @@ export default function Home() {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
+  const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
+  const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     const fetchChatUsers = async () => {
@@ -252,9 +254,8 @@ const startCall = async () => {
     peerConnection.current.ontrack = (event) => {
       console.log("Remote stream received");
       const remoteStream = event.streams[0];
-      if (remoteVideoRef.current && remoteStream) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        // remoteVideoRef.current.play().catch(console.error);
+      if (remoteStream) {
+        setRemoteStreamState(remoteStream);
       }
     };
 
@@ -274,11 +275,7 @@ const startCall = async () => {
     });
 
     localStream.current = stream;
-
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
-      // ❌ .play() mat call karo manually — autoPlay attribute hai
-    }
+    setLocalStreamState(stream);
 
     // ✅ STEP 3: Tracks add karo
     stream.getTracks().forEach((track) => {
@@ -318,9 +315,8 @@ const startCall = async () => {
   peerConnection.current.ontrack = (event) => {
     console.log("Remote stream received");
     const remoteStream = event.streams[0];
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      // remoteVideoRef.current.play().catch(console.error);
+    if (remoteStream) {
+      setRemoteStreamState(remoteStream);
     }
   };
 
@@ -339,10 +335,7 @@ const startCall = async () => {
   });
 
   localStream.current = stream;
-
-  if (localVideoRef.current) {
-    localVideoRef.current.srcObject = stream;
-  }
+  setLocalStreamState(stream);
 
   stream.getTracks().forEach((track) => {
     peerConnection.current?.addTrack(track, stream);
@@ -369,6 +362,8 @@ const startCall = async () => {
     })
     peerConnection.current?.close();
     peerConnection.current = null;
+    setLocalStreamState(null);
+    setRemoteStreamState(null);
     setIsInCall(false);
 
   }
@@ -411,6 +406,8 @@ const startCall = async () => {
           <VideoCallModal
             localVideoRef={localVideoRef}
             remoteVideoRef={remoteVideoRef}
+            localStream={localStreamState}
+            remoteStream={remoteStreamState}
             onEndCall={endCall}
           />
 
