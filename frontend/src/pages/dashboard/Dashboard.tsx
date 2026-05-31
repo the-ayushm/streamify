@@ -261,16 +261,23 @@ export default function Home() {
       });
 
       // ✅ STEP 1: ontrack PEHLE set karo
-      peerConnection.current.ontrack = (event) => {
-        console.log("Remote stream received", event.streams);
+      peerConnection.current.ontrack = async (event) => {
+        console.log("Remote stream received");
 
-        const [stream] = event.streams;
+        const remoteStream = new MediaStream();
 
-        if (stream) {
-          setRemoteStreamState(stream);
+        event.track && remoteStream.addTrack(event.track);
 
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream;
+        setRemoteStreamState(remoteStream);
+
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = remoteStream;
+
+          try {
+            await remoteVideoRef.current.play();
+            console.log("REMOTE VIDEO PLAYING");
+          } catch (err) {
+            console.error("REMOTE PLAY FAILED", err);
           }
         }
       };
@@ -324,20 +331,36 @@ export default function Home() {
     setIncomingCall(null);
 
     peerConnection.current = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302",
+        },
+        {
+          urls: "turn:openrelay.metered.ca:80",
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
+      ],
     });
 
     // ✅ ontrack PEHLE
-    peerConnection.current.ontrack = (event) => {
-      console.log("Remote stream received", event.streams);
+    peerConnection.current.ontrack = async (event) => {
+      console.log("Remote stream received");
 
-      const [stream] = event.streams;
+      const remoteStream = new MediaStream();
 
-      if (stream) {
-        setRemoteStreamState(stream);
+      event.track && remoteStream.addTrack(event.track);
 
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = stream;
+      setRemoteStreamState(remoteStream);
+
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStream;
+
+        try {
+          await remoteVideoRef.current.play();
+          console.log("REMOTE VIDEO PLAYING");
+        } catch (err) {
+          console.error("REMOTE PLAY FAILED", err);
         }
       }
     };
