@@ -7,6 +7,7 @@ type Props = {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   onEndCall: () => void;
+  isVisible: boolean;
 };
 
 export default function VideoCallModal({
@@ -14,22 +15,33 @@ export default function VideoCallModal({
   remoteVideoRef,
   localStream,
   remoteStream,
-  onEndCall
+  onEndCall,
+  isVisible,
 }: Props) {
 
+  // ✅ Local video attach
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-      localVideoRef.current.play().catch(console.error);
+    const video = localVideoRef.current;
+
+    if (!video || !localStream) return;
+
+    if (video.srcObject !== localStream) {
+      video.srcObject = localStream;
     }
-  }, [localStream, localVideoRef]);
 
+    video.play().catch((err) => {
+      console.error("LOCAL VIDEO PLAY FAILED", err);
+    });
+
+  }, [localStream]);
+
+  // ✅ Remote video attach
   useEffect(() => {
-    if (!remoteVideoRef.current || !remoteStream) return;
-
     const video = remoteVideoRef.current;
 
-    // already attached ho to dobara mat karo
+    if (!video || !remoteStream) return;
+
+    // ✅ Baar baar srcObject reset mat karo
     if (video.srcObject !== remoteStream) {
       video.srcObject = remoteStream;
     }
@@ -47,40 +59,41 @@ export default function VideoCallModal({
 
   }, [remoteStream]);
 
-  return (
+  // ✅ Modal hidden
+  if (!isVisible) return null;
 
+  return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
 
-      {/* Remote Video */}
+      {/* ✅ Remote Video */}
       <video
         ref={remoteVideoRef}
         autoPlay
         playsInline
         muted
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover bg-black"
       />
 
-      {/* Local Video */}
+      {/* ✅ Local Video */}
       <video
         ref={localVideoRef}
         autoPlay
         muted
         playsInline
-        className="absolute top-4 right-4 w-64 rounded-xl border-2 border-white"
+        className="absolute top-4 right-4 w-64 rounded-xl border-2 border-white bg-black"
         style={{
-          transform: "scaleX(-1)"
+          transform: "scaleX(-1)",
         }}
       />
 
-      {/* End Call Button */}
+      {/* ✅ End Call Button */}
       <button
         onClick={onEndCall}
-        className="absolute bottom-10 bg-red-500 p-4 rounded-full cursor-pointer"
+        className="absolute bottom-10 bg-red-500 p-4 rounded-full cursor-pointer hover:bg-red-600 transition"
       >
         <PhoneOff className="text-white" />
       </button>
 
     </div>
-
   );
 }

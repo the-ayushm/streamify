@@ -421,19 +421,14 @@ export default function Home() {
         )}
       </div>
 
-      {
-        isInCall && (
-
-          <VideoCallModal
-            localVideoRef={localVideoRef}
-            remoteVideoRef={remoteVideoRef}
-            localStream={localStreamState}
-            remoteStream={remoteStreamState}
-            onEndCall={endCall}
-          />
-
-        )
-      }
+      <VideoCallModal
+        localVideoRef={localVideoRef}
+        remoteVideoRef={remoteVideoRef}
+        localStream={localStreamState}
+        remoteStream={remoteStreamState}
+        onEndCall={endCall}
+        isVisible={isInCall}
+      />
 
       {incomingCall && (
         <div className="fixed top-10 left-10 bg-black text-white p-4 rounded-xl z-50">
