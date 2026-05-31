@@ -25,11 +25,19 @@ export default function VideoCallModal({
   }, [localStream, localVideoRef]);
 
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.play().catch(console.error);
-    }
-  }, [remoteStream, remoteVideoRef]);
+    if (!remoteVideoRef.current || !remoteStream) return;
+
+    remoteVideoRef.current.srcObject = remoteStream;
+
+    remoteVideoRef.current.onloadedmetadata = async () => {
+      try {
+        await remoteVideoRef.current?.play();
+        console.log("Remote video playing");
+      } catch (err) {
+        console.error("Remote play failed", err);
+      }
+    };
+  }, [remoteStream]);
 
   return (
 
