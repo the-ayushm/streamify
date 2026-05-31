@@ -28,6 +28,7 @@ export default function Home() {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
+  const remoteStream = useRef<MediaStream>(new MediaStream());
   const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
   const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
 
@@ -253,10 +254,8 @@ const startCall = async () => {
     // ✅ STEP 1: ontrack PEHLE set karo
     peerConnection.current.ontrack = (event) => {
       console.log("Remote stream received");
-      const remoteStream = event.streams[0];
-      if (remoteStream) {
-        setRemoteStreamState(remoteStream);
-      }
+      remoteStream.current.addTrack(event.track);
+      setRemoteStreamState(remoteStream.current);
     };
 
     peerConnection.current.onicecandidate = (event) => {
@@ -314,10 +313,8 @@ const startCall = async () => {
   // ✅ ontrack PEHLE
   peerConnection.current.ontrack = (event) => {
     console.log("Remote stream received");
-    const remoteStream = event.streams[0];
-    if (remoteStream) {
-      setRemoteStreamState(remoteStream);
-    }
+    remoteStream.current.addTrack(event.track);
+    setRemoteStreamState(remoteStream.current);
   };
 
   peerConnection.current.onicecandidate = (event) => {
@@ -364,6 +361,7 @@ const startCall = async () => {
     peerConnection.current = null;
     setLocalStreamState(null);
     setRemoteStreamState(null);
+    remoteStream.current = new MediaStream();
     setIsInCall(false);
 
   }
