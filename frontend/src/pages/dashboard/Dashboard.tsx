@@ -31,6 +31,7 @@ export default function Home() {
   const remoteStream = useRef<MediaStream>(new MediaStream());
   const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
   const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
+  const remoteStreamRef = useRef(new MediaStream());
 
   useEffect(() => {
     const fetchChatUsers = async () => {
@@ -262,24 +263,11 @@ export default function Home() {
 
       // ✅ STEP 1: ontrack PEHLE set karo
       peerConnection.current.ontrack = async (event) => {
-        console.log("Remote stream received");
+        console.log("Remote track received:", event.track.kind);
 
-        const remoteStream = new MediaStream();
+        remoteStreamRef.current.addTrack(event.track);
 
-        event.track && remoteStream.addTrack(event.track);
-
-        setRemoteStreamState(remoteStream);
-
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-
-          try {
-            await remoteVideoRef.current.play();
-            console.log("REMOTE VIDEO PLAYING");
-          } catch (err) {
-            console.error("REMOTE PLAY FAILED", err);
-          }
-        }
+        setRemoteStreamState(remoteStreamRef.current);
       };
 
       peerConnection.current.onicecandidate = (event) => {
@@ -345,24 +333,11 @@ export default function Home() {
 
     // ✅ ontrack PEHLE
     peerConnection.current.ontrack = async (event) => {
-      console.log("Remote stream received");
+      console.log("Remote track received:", event.track.kind);
 
-      const remoteStream = new MediaStream();
+      remoteStreamRef.current.addTrack(event.track);
 
-      event.track && remoteStream.addTrack(event.track);
-
-      setRemoteStreamState(remoteStream);
-
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-
-        try {
-          await remoteVideoRef.current.play();
-          console.log("REMOTE VIDEO PLAYING");
-        } catch (err) {
-          console.error("REMOTE PLAY FAILED", err);
-        }
-      }
+      setRemoteStreamState(remoteStreamRef.current);
     };
 
     peerConnection.current.onicecandidate = (event) => {

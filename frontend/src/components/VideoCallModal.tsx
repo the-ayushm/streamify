@@ -27,16 +27,24 @@ export default function VideoCallModal({
   useEffect(() => {
     if (!remoteVideoRef.current || !remoteStream) return;
 
-    remoteVideoRef.current.srcObject = remoteStream;
+    const video = remoteVideoRef.current;
 
-    remoteVideoRef.current.onloadedmetadata = async () => {
+    // already attached ho to dobara mat karo
+    if (video.srcObject !== remoteStream) {
+      video.srcObject = remoteStream;
+    }
+
+    const playVideo = async () => {
       try {
-        await remoteVideoRef.current?.play();
-        console.log("Remote video playing");
+        await video.play();
+        console.log("REMOTE VIDEO PLAYING");
       } catch (err) {
-        console.error("Remote play failed", err);
+        console.error("REMOTE PLAY FAILED", err);
       }
     };
+
+    playVideo();
+
   }, [remoteStream]);
 
   return (
