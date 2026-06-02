@@ -28,7 +28,6 @@ export default function Home() {
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const localStream = useRef<MediaStream | null>(null);
-  const remoteStream = useRef<MediaStream>(new MediaStream());
   const [localStreamState, setLocalStreamState] = useState<MediaStream | null>(null);
   const [remoteStreamState, setRemoteStreamState] = useState<MediaStream | null>(null);
   const remoteStreamRef = useRef(new MediaStream());
@@ -262,10 +261,13 @@ export default function Home() {
       });
 
       // ✅ STEP 1: ontrack PEHLE set karo
-      peerConnection.current.ontrack = async (event) => {
+      peerConnection.current.ontrack = (event) => {
+
         console.log("Remote track received:", event.track.kind);
 
-        remoteStreamRef.current.addTrack(event.track);
+        event.streams[0].getTracks().forEach((track) => {
+          remoteStreamRef.current.addTrack(track);
+        });
 
         setRemoteStreamState(remoteStreamRef.current);
       };
@@ -332,10 +334,13 @@ export default function Home() {
     });
 
     // ✅ ontrack PEHLE
-    peerConnection.current.ontrack = async (event) => {
+    peerConnection.current.ontrack = (event) => {
+
       console.log("Remote track received:", event.track.kind);
 
-      remoteStreamRef.current.addTrack(event.track);
+      event.streams[0].getTracks().forEach((track) => {
+        remoteStreamRef.current.addTrack(track);
+      });
 
       setRemoteStreamState(remoteStreamRef.current);
     };
@@ -384,7 +389,7 @@ export default function Home() {
     peerConnection.current = null;
     setLocalStreamState(null);
     setRemoteStreamState(null);
-    remoteStream.current = new MediaStream();
+    remoteStreamRef.current = new MediaStream();
     setIsInCall(false);
 
   }
