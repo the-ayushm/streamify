@@ -19,74 +19,55 @@ export default function VideoCallModal({
   isVisible,
 }: Props) {
 
-  // ✅ Local video attach
   useEffect(() => {
     const video = localVideoRef.current;
-
     if (!video || !localStream) return;
+    video.srcObject = localStream;
+    video.play().catch(() => {});
+  }, [localStream, isVisible]);
 
-    if (video.srcObject !== localStream) {
-      video.srcObject = localStream;
-    }
-
-    video.play().catch((err) => {
-      console.error("LOCAL VIDEO PLAY FAILED", err);
-    });
-
-  }, [localStream]);
-
-  // ✅ Remote video attach
   useEffect(() => {
     const video = remoteVideoRef.current;
-
     if (!video || !remoteStream) return;
+    video.srcObject = remoteStream;
 
-    // ✅ Baar baar srcObject reset mat karo
-    if (video.srcObject !== remoteStream) {
-      video.srcObject = remoteStream;
-    }
-
-    const playVideo = async () => {
-      try {
-        await video.play();
-        console.log("REMOTE VIDEO PLAYING");
-      } catch (err) {
+    const tryPlay = () => {
+      video.play().catch(err => {
         console.error("REMOTE PLAY FAILED", err);
-      }
+      });
     };
 
-    playVideo();
+    // wait for tracks to be ready
+    if (video.readyState >= 2) {
+      tryPlay();
+    } else {
+      video.addEventListener("loadeddata", tryPlay, { once: true });
+    }
+  }, [remoteStream, isVisible]);
 
-  }, [remoteStream]);
-
-  // ✅ Modal hidden
   if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
 
-      {/* ✅ Remote Video */}
+      {/* Remote Video — NOT muted */}
       <video
         ref={remoteVideoRef}
         autoPlay
         playsInline
-        muted
         className="w-full h-full object-cover bg-black"
       />
 
-      {/* ✅ Local Video */}
+      {/* Local Video — muted to avoid echo */}
       <video
         ref={localVideoRef}
         autoPlay
         muted
         playsInline
         className="absolute top-4 right-4 w-64 rounded-xl border-2 border-white bg-black"
-        style={{
-          transform: "scaleX(-1)",
-        }}
+        style={{ transform: "scaleX(-1)" }}
       />
 
-      {/* ✅ End Call Button */}
       <button
         onClick={onEndCall}
         className="absolute bottom-10 bg-red-500 p-4 rounded-full cursor-pointer hover:bg-red-600 transition"

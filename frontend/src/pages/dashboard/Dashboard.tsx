@@ -246,6 +246,8 @@ export default function Home() {
   }, [])
 
   const startCall = async () => {
+    remoteStreamRef.current = new MediaStream();
+    setRemoteStreamState(null);
     try {
       peerConnection.current = new RTCPeerConnection({
         iceServers: [
@@ -317,6 +319,8 @@ export default function Home() {
   };
 
   const acceptCall = async () => {
+    remoteStreamRef.current = new MediaStream();
+    setRemoteStreamState(null);
     const currentCall = incomingCall; // ✅ stale closure fix
     setIncomingCall(null);
 
@@ -382,17 +386,20 @@ export default function Home() {
   };
 
   const endCall = () => {
-    localStream.current?.getTracks().forEach((track) => {
-      track.stop()
-    })
+    localStream.current?.getTracks().forEach((track) => track.stop());
     peerConnection.current?.close();
     peerConnection.current = null;
+
+    // Stop all tracks on remote stream too
+    remoteStreamRef.current.getTracks().forEach(t => t.stop());
+
+    // Reset BEFORE state updates
+    remoteStreamRef.current = new MediaStream();
+
     setLocalStreamState(null);
     setRemoteStreamState(null);
-    remoteStreamRef.current = new MediaStream();
     setIsInCall(false);
-
-  }
+  };
 
   return (
     <main className="flex h-screen overflow-hidden bg-background">
